@@ -53,5 +53,6 @@ export async function createCommand(
   options: string | CreateOptions
 ): Promise<SwitchResult> {
   const opts = typeof options === 'string' ? { name: options } : options;
-  return this.switch({ ...opts, create: true });
+  // Call switchCommand directly instead of this.switch to avoid circular dependency
+  return switchCommand.call(this, { ...opts, create: true });
 }
