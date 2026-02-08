@@ -23,6 +23,8 @@
   "scripts": {
     "build": "tsup",
     "test": "vitest",
+    "test:unit": "vitest test/unit",
+    "test:integration": "vitest test/integration",
     "test:run": "vitest run",
     "dev": "tsup --watch",
     "lint": "tsc"
