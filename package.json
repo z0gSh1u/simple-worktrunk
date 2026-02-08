@@ -1,0 +1,39 @@
+{
+  "name": "simple-worktrunk",
+  "version": "0.0.1",
+  "description": "A lightweight wrapper for worktrunk CLI",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "keywords": [
+    "worktrunk",
+    "git",
+    "worktree",
+    "wrapper",
+    "cli"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "dev": "tsup --watch",
+    "lint": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "tsup": "^8",
+    "typescript": "^5",
+    "vitest": "^2"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
