@@ -15,14 +15,14 @@ export async function mergeCommand(
   const opts = options || {};
   const { options: config } = this;
 
-  const args = ['merge'];
-
-  if (opts.target) {
-    args.push('--target', opts.target);
-  }
+  const args = ['merge', '-y'];
 
   if (opts.keepWorktree) {
-    args.push('--keep-worktree');
+    args.push('--no-remove');
+  }
+
+  if (opts.target) {
+    args.push(opts.target);
   }
 
   const stdout = await execCommand(args, config);
