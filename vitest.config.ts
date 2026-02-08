@@ -8,10 +8,8 @@ export default defineConfig({
       'test/unit/**/*.test.ts',
       'test/integration/**/*.test.ts',
     ],
-    // Don't parallelize integration tests (shared state)
-    fileParallelism: {
-      include: ['test/unit/**/*.test.ts'],
-    },
+    // Integration tests share TestRepo state, so disable file parallelism
+    fileParallelism: false,
     setupFiles: ['./test/setup.ts'],
     teardownFiles: ['./test/teardown.ts'],
   },
