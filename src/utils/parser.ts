@@ -16,8 +16,8 @@ export function parseListOutput(stdout: string): ListResult {
 
   for (const line of lines) {
     // Parse worktree line
-    // Format: "worktree-name /path/to/worktree [branch]"
-    const match = line.match(/^([^\s]+)\s+([^\s]+)\s+\[([^\]]+)\](\s+\*)?$/);
+    // Format: "worktree-name /path/to/worktree [branch]" or "worktree-name /path/to/worktree [branch]*"
+    const match = line.match(/^([^\s]+)\s+([^\s]+)\s+\[([^\]]+)\](\*)?$/);
     if (match) {
       const [, name, path, branch, isCurrent] = match;
       worktrees.push({
