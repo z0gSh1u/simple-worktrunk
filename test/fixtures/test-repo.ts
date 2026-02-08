@@ -14,7 +14,7 @@ export interface GitWorktree {
 
 export class TestRepo {
   readonly path: string;
-  private git: SimpleGit;
+  readonly git: SimpleGit;
 
   private constructor(path: string) {
     this.path = path;

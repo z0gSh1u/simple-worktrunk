@@ -15,10 +15,10 @@ export async function removeCommand(
   const opts = typeof options === 'string' ? { name: options } : options;
   const { options: config } = this;
 
-  const args = ['remove'];
+  const args = ['remove', '--foreground', '-y', '-f'];
 
   if (opts?.keepBranch) {
-    args.push('--keep-branch');
+    args.push('--no-delete-branch');
   }
 
   if (opts?.name) {
