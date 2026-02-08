@@ -32,6 +32,16 @@ yarn add simple-worktrunk
 cargo install worktrunk
 ```
 
+## Testing
+
+The project uses a hybrid testing strategy:
+
+- **Unit tests** (`pnpm test:unit`) - Fast tests for pure functions (parsers, errors)
+- **Integration tests** (`pnpm test:integration`) - Real `wt` CLI tests against test git repository
+- **All tests** (`pnpm test`) - Run both unit and integration tests
+
+**Note:** Integration tests require the `wt` binary to be installed. If `wt` is not available, integration tests will be skipped.
+
 ## Quick Start
 
 ```typescript
