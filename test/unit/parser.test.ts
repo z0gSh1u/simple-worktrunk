@@ -2,8 +2,23 @@ import { describe, it, expect } from 'vitest';
 import { parseListOutput, parseHookShowOutput, parseSwitchOutput } from '../../src/utils/parser.js';
 
 describe('parseListOutput', () => {
-  it('should parse standard worktree format', () => {
-    const output = 'main /repo/main [main]*\nfeature /repo/feature [feature]';
+  it('should parse JSON worktree format', () => {
+    const output = JSON.stringify([
+      {
+        branch: 'main',
+        path: '/repo/main',
+        kind: 'worktree',
+        is_main: true,
+        is_current: true,
+      },
+      {
+        branch: 'feature',
+        path: '/repo/feature',
+        kind: 'worktree',
+        is_main: false,
+        is_current: false,
+      },
+    ]);
 
     const result = parseListOutput(output);
 
@@ -25,7 +40,15 @@ describe('parseListOutput', () => {
   });
 
   it('should handle worktree names with special characters', () => {
-    const output = 'feature/abc-123 /repo/feature/abc-123 [feature/abc-123]*';
+    const output = JSON.stringify([
+      {
+        branch: 'feature/abc-123',
+        path: '/repo/feature/abc-123',
+        kind: 'worktree',
+        is_main: false,
+        is_current: true,
+      },
+    ]);
     const result = parseListOutput(output);
 
     expect(result.worktrees[0].name).toBe('feature/abc-123');
@@ -33,40 +56,87 @@ describe('parseListOutput', () => {
   });
 
   it('should handle unicode characters in paths', () => {
-    const output = 'feature /路径/feature [feature]*';
+    const output = JSON.stringify([
+      {
+        branch: 'feature',
+        path: '/路径/feature',
+        kind: 'worktree',
+        is_main: false,
+        is_current: true,
+      },
+    ]);
     const result = parseListOutput(output);
 
     expect(result.worktrees[0].path).toBe('/路径/feature');
   });
 
-  it('should handle malformed lines gracefully', () => {
-    const output = 'valid /repo/valid [valid]*\ninvalid line\nalso /repo/also [also]';
+  it('should filter out non-worktree items', () => {
+    const output = JSON.stringify([
+      {
+        branch: 'main',
+        path: '/repo/main',
+        kind: 'worktree',
+        is_main: true,
+        is_current: true,
+      },
+      {
+        branch: 'bare',
+        path: '/repo/.git/worktrees/bare',
+        kind: 'bare',
+        is_main: false,
+        is_current: false,
+      },
+    ]);
     const result = parseListOutput(output);
 
-    expect(result.worktrees).toHaveLength(2);
-    expect(result.worktrees[0].name).toBe('valid');
+    expect(result.worktrees).toHaveLength(1);
+    expect(result.worktrees[0].name).toBe('main');
   });
 
-  it('should identify bare worktree as main', () => {
-    const output = 'bare /repo/.git/worktrees/bare [(bare)]*';
-    const result = parseListOutput(output);
-
-    expect(result.worktrees[0].name).toBe('bare');
-    expect(result.worktrees[0].isMain).toBe(true);
-  });
-
-  it('should identify master branch as main', () => {
-    const output = 'main /repo/main [master]*';
+  it('should identify main worktree', () => {
+    const output = JSON.stringify([
+      {
+        branch: 'main',
+        path: '/repo/main',
+        kind: 'worktree',
+        is_main: true,
+        is_current: true,
+      },
+    ]);
     const result = parseListOutput(output);
 
     expect(result.worktrees[0].isMain).toBe(true);
   });
 
   it('should handle worktree without current marker', () => {
-    const output = 'feature /repo/feature [feature]';
+    const output = JSON.stringify([
+      {
+        branch: 'feature',
+        path: '/repo/feature',
+        kind: 'worktree',
+        is_main: false,
+        is_current: false,
+      },
+    ]);
     const result = parseListOutput(output);
 
     expect(result.current).toBe('');
+  });
+
+  it('should handle JSON with warnings', () => {
+    const output = '▲ Some warning\n' + JSON.stringify([
+      {
+        branch: 'main',
+        path: '/repo/main',
+        kind: 'worktree',
+        is_main: true,
+        is_current: true,
+      },
+    ]);
+    const result = parseListOutput(output);
+
+    expect(result.worktrees).toHaveLength(1);
+    expect(result.worktrees[0].name).toBe('main');
   });
 });
 

@@ -7,32 +7,47 @@ import type {
 
 /**
  * Parse `wt list` output into structured data
- * Input format from CLI: lines with worktree info
+ * Input format from CLI: JSON array of worktree objects
  */
 export function parseListOutput(stdout: string): ListResult {
-  const lines = stdout.trim().split('\n').filter(Boolean);
-  const worktrees: WorktreeInfo[] = [];
-  let current = '';
+  // Parse JSON output from wt list --format json
+  // The output may contain warnings in stderr, so we need to find the JSON part
+  // JSON starts with '[' and ends with ']'
+  const jsonStart = stdout.indexOf('[');
+  const jsonEnd = stdout.lastIndexOf(']');
 
-  for (const line of lines) {
-    // Parse worktree line
-    // Format: "worktree-name /path/to/worktree [branch]" or "worktree-name /path/to/worktree [branch]*"
-    const match = line.match(/^([^\s]+)\s+([^\s]+)\s+\[([^\]]+)\](\*)?$/);
-    if (match) {
-      const [, name, path, branch, isCurrent] = match;
-      worktrees.push({
-        name,
-        path,
-        branch,
-        isMain: name === 'bare' || branch === 'main' || branch === 'master',
-      });
-      if (isCurrent) {
-        current = name;
-      }
-    }
+  if (jsonStart === -1 || jsonEnd === -1) {
+    return { worktrees: [], current: '' };
   }
 
-  return { worktrees, current };
+  const jsonString = stdout.substring(jsonStart, jsonEnd + 1);
+
+  try {
+    const data = JSON.parse(jsonString);
+    const worktrees: WorktreeInfo[] = [];
+    let current = '';
+
+    for (const item of data) {
+      // Only process worktrees, not bare repos or other kinds
+      if (item.kind !== 'worktree') continue;
+
+      worktrees.push({
+        name: item.branch,
+        path: item.path,
+        branch: item.branch,
+        isMain: item.is_main || false,
+      });
+
+      if (item.is_current) {
+        current = item.branch;
+      }
+    }
+
+    return { worktrees, current };
+  } catch (error) {
+    // Fallback to empty result if JSON parsing fails
+    return { worktrees: [], current: '' };
+  }
 }
 
 /**

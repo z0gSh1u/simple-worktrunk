@@ -14,7 +14,7 @@ export async function listCommand(
 ): Promise<ListResult> {
   const { options: config } = this;
 
-  const stdout = await execCommand(['list'], config);
+  const stdout = await execCommand(['list', '--format', 'json'], config);
 
   return parseListOutput(stdout);
 }
