@@ -34,9 +34,7 @@ jobs:
         run: pnpm install
 
       - name: Install Rust
-        uses: dtolnay-rust/actions/setup@v1
-        with:
-          toolchain: stable
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Install worktrunk CLI
         run: cargo install worktrunk
