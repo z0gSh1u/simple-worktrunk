@@ -86,12 +86,24 @@ export function parseHookShowOutput(stdout: string): HookShowResult {
 
 /**
  * Parse switch/create output to extract path
+ * wt outputs worktree path to stderr in format: "worktree @ /path/to/worktree"
  */
-export function parseSwitchOutput(stdout: string): { path: string } {
-  // Look for path in output
-  const pathMatch = stdout.match(/\/[^\s]+/);
-  if (pathMatch) {
-    return { path: pathMatch[0] };
+export function parseSwitchOutput(output: string): { path: string } {
+  if (!output) {
+    return { path: '' };
   }
+
+  // Match path after @ symbol
+  const pathMatch = output.match(/@\s+([^\s\n]+)/);
+  if (pathMatch) {
+    return { path: pathMatch[1] };
+  }
+
+  // Fallback: look for any path-like pattern
+  const fallbackMatch = output.match(/[~]?[\/]?[^\s\n]+\/[^\s\n]+/);
+  if (fallbackMatch) {
+    return { path: fallbackMatch[0] };
+  }
+
   return { path: '' };
 }

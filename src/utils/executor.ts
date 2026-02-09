@@ -27,6 +27,25 @@ export async function execCommand(
   return result.stdout.trim();
 }
 
+export async function execCommandWithStderr(
+  args: string[],
+  options: NormalizedOptions
+): Promise<ExecResult> {
+  const { binary, baseDir } = options;
+
+  const result = await spawnCommand(binary, args, baseDir);
+
+  if (result.exitCode !== 0) {
+    throw new CommandFailedError(
+      `${binary} ${args.join(' ')}`,
+      result.exitCode || 'unknown',
+      result.stderr
+    );
+  }
+
+  return result;
+}
+
 async function spawnCommand(
   binary: string,
   args: string[],
