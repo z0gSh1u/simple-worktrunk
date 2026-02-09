@@ -32,16 +32,6 @@ yarn add simple-worktrunk
 cargo install worktrunk
 ```
 
-## Testing
-
-The project uses a hybrid testing strategy:
-
-- **Unit tests** (`pnpm test:unit`) - Fast tests for pure functions (parsers, errors)
-- **Integration tests** (`pnpm test:integration`) - Real `wt` CLI tests against test git repository
-- **All tests** (`pnpm test`) - Run both unit and integration tests
-
-**Note:** Integration tests require the `wt` binary to be installed. If `wt` is not available, integration tests will be skipped.
-
 ## Quick Start
 
 ```typescript
@@ -103,8 +93,6 @@ const wt = worktrunk({
 })
 ```
 
----
-
 ### `wt.switch(options)`
 
 Switch to an existing worktree or create a new one.
@@ -154,8 +142,6 @@ await wt.switch({ name: 'hotfix', create: true, base: 'production' })
 await wt.switch({ name: 'dev', exec: 'npm run dev' })
 ```
 
----
-
 ### `wt.create(options)`
 
 Create a new worktree (alias for `switch({ create: true })`).
@@ -191,8 +177,6 @@ await wt.create({ name: 'hotfix', base: 'v1.0.0' })
 // Create and run command
 await wt.create({ name: 'dev', exec: 'npm install' })
 ```
-
----
 
 ### `wt.remove(options)`
 
@@ -235,8 +219,6 @@ await wt.remove({ name: 'feature-old', keepBranch: true })
 await wt.remove()
 ```
 
----
-
 ### `wt.list()`
 
 List all worktrees.
@@ -275,8 +257,6 @@ for (const wt of worktrees) {
 // Filter for feature branches
 const features = worktrees.filter((w) => !w.isMain)
 ```
-
----
 
 ### `wt.merge(options)`
 
@@ -319,8 +299,6 @@ await wt.merge({ target: 'develop' })
 // Merge but keep worktree
 await wt.merge({ keepWorktree: true })
 ```
-
----
 
 ### `wt.hook(options)`
 
@@ -382,8 +360,6 @@ await wt.hook({
 await wt.hook({ type: 'pre-merge', userOnly: true })
 ```
 
----
-
 ### `wt.hookShow()`
 
 Show configured hooks.
@@ -417,8 +393,6 @@ for (const hook of hooks['post-create'] || []) {
 }
 ```
 
----
-
 ## Error Handling
 
 The library exports custom error types for better error handling:
@@ -445,6 +419,16 @@ try {
   }
 }
 ```
+
+## Testing
+
+The project uses a hybrid testing strategy:
+
+- **Unit tests** (`pnpm test:unit`) - Fast tests for pure functions (parsers, errors)
+- **Integration tests** (`pnpm test:integration`) - Real `wt` CLI tests against test git repository
+- **All tests** (`pnpm test`) - Run both unit and integration tests
+
+**Note:** Integration tests require the `wt` binary to be installed. If `wt` is not available, integration tests will be skipped.
 
 ## License
 
