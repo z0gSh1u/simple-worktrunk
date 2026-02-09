@@ -1,6 +1,6 @@
 import type { WorktrunkInstance } from '../worktrunk.js';
 import type { RemoveOptions, RemoveResult } from '../types.js';
-import { execCommand } from '../utils/executor.js';
+import { execCommandWithStderr } from '../utils/executor.js';
 
 declare module '../worktrunk.js' {
   interface WorktrunkInstance {
@@ -25,7 +25,7 @@ export async function removeCommand(
     args.push(opts.name);
   }
 
-  const stdout = await execCommand(args, config);
+  const result = await execCommandWithStderr(args, config);
 
   return {
     removed: opts?.name || 'current',

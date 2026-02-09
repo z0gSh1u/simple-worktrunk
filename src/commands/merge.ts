@@ -1,6 +1,6 @@
 import type { WorktrunkInstance } from '../worktrunk.js';
 import type { MergeOptions, MergeResult } from '../types.js';
-import { execCommand } from '../utils/executor.js';
+import { execCommandWithStderr } from '../utils/executor.js';
 
 declare module '../worktrunk.js' {
   interface WorktrunkInstance {
@@ -25,7 +25,7 @@ export async function mergeCommand(
     args.push(opts.target);
   }
 
-  const stdout = await execCommand(args, config);
+  const result = await execCommandWithStderr(args, config);
 
   return {
     merged: 'current',

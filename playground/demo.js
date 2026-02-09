@@ -7,11 +7,19 @@ import readline from 'readline';
 import { execSync } from 'child_process';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { worktrunk } from '../dist/index.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+
+function expandPath(inputPath) {
+  if (!inputPath.startsWith('~')) {
+    return inputPath;
+  }
+  return inputPath.replace('~', os.homedir());
+}
 
 function pause(message) {
   return new Promise((resolve) => {
@@ -101,7 +109,7 @@ async function main() {
   await pause('Step 5: Make changes in the new worktree');
 
   console.log('\n📝 Creating new files in the worktree...');
-  const worktreePath = createResult.path;
+  const worktreePath = expandPath(createResult.path);
   
   console.log(`   Writing to: ${worktreePath}`);
   fs.writeFileSync(path.join(worktreePath, 'demo.js'), 'console.log("Hello from feature branch!");');
@@ -126,14 +134,14 @@ async function main() {
   console.log('\n🔄 Switching back to main worktree...');
   const switchResult = await wt.switch('main');
   console.log(`✅ Switched to: ${switchResult.worktree}`);
-  console.log(`   Path: ${switchResult.path}`);
+  console.log(`   Path: ${expandPath(switchResult.path)}`);
 
   await pause('Step 8: Switch back to feature worktree');
 
   console.log('\n🔄 Switching back to feature worktree...');
   const switchResult2 = await wt.switch('feature-add-demo');
   console.log(`✅ Switched to: ${switchResult2.worktree}`);
-  console.log(`   Path: ${switchResult2.path}`);
+  console.log(`   Path: ${expandPath(switchResult2.path)}`);
 
   await pause('Step 9: Create another worktree from feature branch');
 
@@ -142,7 +150,7 @@ async function main() {
   console.log(`✅ Worktree created!`);
   console.log(`   Name: ${createResult2.worktree}`);
   console.log(`   Branch: ${createResult2.branch}`);
-  console.log(`   Path: ${createResult2.path}`);
+  console.log(`   Path: ${expandPath(createResult2.path)}`);
 
   await pause('Step 10: List all worktrees');
 
@@ -168,7 +176,15 @@ async function main() {
   await wt.switch('main');
   console.log('✅ Now on main branch');
 
-  await pause('Step 13: List worktrees after cleanup');
+  await pause('Step 13: Merge feature branch to main');
+
+  console.log('\n🔀 Merging feature-add-demo branch into main...');
+  const mergeResult = await wt.merge();
+  console.log(`✅ Merged: ${mergeResult.merged}`);
+  console.log(`   Target: ${mergeResult.target}`);
+  console.log(`   Worktree removed: ${mergeResult.worktreeRemoved}`);
+
+  await pause('Step 14: List worktrees after merge');
 
   console.log('\n📋 Listing all worktrees...');
   const listResult4 = await wt.list();
@@ -179,7 +195,7 @@ async function main() {
     console.log(`    Path: ${w.path}`);
   });
 
-  await pause('Step 14: Create worktree with base from main');
+  await pause('Step 16: Create worktree with base from main');
 
   console.log('\n🌱 Creating worktree "bugfix" from main branch...');
   const createResult3 = await wt.create({ name: 'bugfix', base: 'main' });
@@ -188,20 +204,20 @@ async function main() {
   console.log(`   Branch: ${createResult3.branch}`);
   console.log(`   Path: ${createResult3.path}`);
 
-  await pause('Step 15: Remove worktree keeping branch');
+  await pause('Step 17: Remove worktree keeping branch');
 
   console.log('\n🗑️  Removing worktree but keeping the branch...');
   const removeResult2 = await wt.remove({ name: 'bugfix', keepBranch: true });
   console.log(`✅ Worktree removed: ${removeResult2.removed}`);
   console.log(`   Branch deleted: ${removeResult2.branchDeleted}`);
 
-  await pause('Step 16: Final worktree listing');
+  await pause('Step 18: Final worktree listing');
 
   console.log('\n📋 Final listing of all worktrees...');
-  const listResult5 = await wt.list();
-  console.log(`Current worktree: ${listResult5.current}`);
+  const listResult6 = await wt.list();
+  console.log(`Current worktree: ${listResult6.current}`);
   console.log('All worktrees:');
-  listResult5.worktrees.forEach(w => {
+  listResult6.worktrees.forEach(w => {
     console.log(`  - ${w.name} (${w.branch})${w.isMain ? ' [MAIN]' : ''}`);
     console.log(`    Path: ${w.path}`);
   });
