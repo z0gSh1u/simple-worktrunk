@@ -10,7 +10,6 @@ export default defineConfig({
     ],
     // Integration tests share TestRepo state, so disable file parallelism
     fileParallelism: false,
-    setupFiles: ['./test/setup.ts'],
-    teardownFiles: ['./test/teardown.ts'],
+    setupFiles: ['./test/setup.ts', './test/teardown.ts'],
   },
 });

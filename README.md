@@ -1,34 +1,19 @@
 # simple-worktrunk
 
-A lightweight Node.js wrapper for the [worktrunk](https://github.com/max-sixty/worktrunk) CLI, providing a clean, promise-based API for managing Git worktrees.
+English | [简体中文](./README.zh-CN.md)
 
-## Features
-
-- **Promise-based API** - Modern async/await interface
-- **TypeScript-first** - Full type definitions included
-- **Lightweight** - Thin wrapper with zero dependencies
-- **Chainable** - Methods return promises for easy composition
-- **Error handling** - Custom error types for better debugging
+Git Worktree is the consensus solution for avoiding code repository modification conflicts during parallel Coding Agent execution. simple-worktrunk provides a lightweight Node.js wrapper for the [worktrunk](https://github.com/max-sixty/worktrunk) CLI, offering a clean, promise-based API for managing Git Worktrees.
 
 ## Installation
 
 ```bash
-# pnpm
-pnpm add simple-worktrunk
-
-# npm
-npm install simple-worktrunk
-
-# yarn
-yarn add simple-worktrunk
+npm install simple-worktrunk # npm
+pnpm add simple-worktrunk    # pnpm
 ```
-
-### Prerequisites
 
 **Requires the worktrunk CLI (`wt`) to be installed.** See the [official worktrunk installation guide](https://github.com/max-sixty/worktrunk#installation) for details.
 
 ```bash
-# Install worktrunk CLI (example)
 cargo install worktrunk
 ```
 
@@ -36,27 +21,21 @@ cargo install worktrunk
 
 ```typescript
 import { worktrunk } from 'simple-worktrunk'
-
 const wt = worktrunk()
-
 // Create a new worktree
 await wt.create('feature-auth')
-
 // List all worktrees
 const { worktrees, current } = await wt.list()
 console.log(current) // 'feature-auth'
-
 // Switch to another worktree
 await wt.switch('main')
-
 // When done, merge and cleanup
 await wt.merge()
-
 // Remove a worktree
 await wt.remove('old-branch')
 ```
 
-## API Reference
+## API
 
 ### `worktrunk(options?)`
 
@@ -131,15 +110,12 @@ interface SwitchResult {
 ```typescript
 // Switch to existing worktree
 await wt.switch('main')
-
 // Create and switch in one command
 const result = await wt.switch({ name: 'feature', create: true })
-
 // Create from specific base
 await wt.switch({ name: 'hotfix', create: true, base: 'production' })
-
 // Switch and execute command
-await wt.switch({ name: 'dev', exec: 'npm run dev' })
+await wt.switch({ name: 'dev', exec: 'pnpm install' })
 ```
 
 ### `wt.create(options)`
@@ -170,12 +146,10 @@ const result = await wt.create('feature-auth')
 ```typescript
 // Simple creation
 await wt.create('feature-auth')
-
 // Create from specific base
 await wt.create({ name: 'hotfix', base: 'v1.0.0' })
-
 // Create and run command
-await wt.create({ name: 'dev', exec: 'npm install' })
+await wt.create({ name: 'dev', exec: 'pnpm install' })
 ```
 
 ### `wt.remove(options)`
@@ -247,14 +221,13 @@ interface WorktreeInfo {
 
 ```typescript
 const { worktrees, current } = await wt.list()
-
+// Get current worktree
 console.log(`Current worktree: ${current}`)
-
+// List all worktrees
 for (const wt of worktrees) {
   console.log(`${wt.name} (${wt.branch}) - ${wt.path}`)
 }
-
-// Filter for feature branches
+// Exclude [Main] worktree
 const features = worktrees.filter((w) => !w.isMain)
 ```
 
@@ -426,9 +399,17 @@ The project uses a hybrid testing strategy:
 
 - **Unit tests** (`pnpm test:unit`) - Fast tests for pure functions (parsers, errors)
 - **Integration tests** (`pnpm test:integration`) - Real `wt` CLI tests against test git repository
-- **All tests** (`pnpm test`) - Run both unit and integration tests
 
-**Note:** Integration tests require the `wt` binary to be installed. If `wt` is not available, integration tests will be skipped.
+## Playground
+
+The `playground/` directory contains an interactive demo showcasing the complete lifecycle of managing Git Worktrees using the simple-worktrunk library.
+
+```bash
+pnpm build
+node playground/demo.js
+```
+
+The demo interactively walks through creating, switching, and removing worktrees.
 
 ## License
 
