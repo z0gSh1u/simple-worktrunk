@@ -5,5 +5,11 @@ export default defineConfig({
   format: ['esm'],
   dts: true,
   clean: true,
-  sourcemap: true,
+  banner: {
+    js: `/**
+ * simple-worktrunk
+ * @link https://github.com/z0gSh1u/simple-worktrunk
+ * @license MIT
+ */`,
+  },
 })

@@ -2,7 +2,7 @@
 
 [English](./README.md) | 简体中文
 
-Git Worktree 已是当前并行化的 Coding Agent 执行过程中，避免代码仓库修改冲突的共识解决方案。simple-worktrunk 提供一个轻量的  [worktrunk](https://github.com/max-sixty/worktrunk) CLI 的 Node.js Wrapper，用简洁的 Promise 风格 API 来管理 Git Worktrees。
+Git Worktree 已是当前并行化的 Coding Agent 执行过程中，避免代码仓库修改冲突的共识解决方案。simple-worktrunk 提供一个轻量的 [worktrunk](https://github.com/max-sixty/worktrunk) CLI 的 Node.js Wrapper，用简洁的 Promise 风格 API 来管理 Git Worktrees。
 
 ## 安装
 
@@ -22,15 +22,20 @@ cargo install worktrunk
 ```typescript
 import { worktrunk } from 'simple-worktrunk'
 const wt = worktrunk()
+
 // 创建新的 worktree
 await wt.create('feature-auth')
+
 // 列出所有 worktree
 const { worktrees, current } = await wt.list()
 console.log(current) // 'feature-auth'
+
 // 切换到另一个 worktree
 await wt.switch('main')
+
 // 完成后，合并并清理
 await wt.merge()
+
 // 删除 worktree
 await wt.remove('old-branch')
 ```
@@ -51,10 +56,10 @@ const wt = worktrunk()
 
 **选项对象：**
 
-| 属性     | 类型      | 默认值       | 描述                    |
-| -------- | --------- | ------------ | ----------------------- |
-| `binary` | `string`  | `'wt'`       | worktrunk 二进制文件路径 |
-| `baseDir`| `string`  | `undefined`  | 命令的基础目录          |
+| 属性      | 类型     | 默认值      | 描述                     |
+| --------- | -------- | ----------- | ------------------------ |
+| `binary`  | `string` | `'wt'`      | worktrunk 二进制文件路径 |
+| `baseDir` | `string` | `undefined` | 命令的基础目录           |
 
 **示例：**
 
@@ -130,12 +135,12 @@ const result = await wt.create('feature-auth')
 
 **选项对象：**
 
-| 属性     | 类型      | 默认值       | 描述                       |
-| -------- | --------- | ------------ | -------------------------- |
-| `name`   | `string`  | （必需）     | worktree/分支名称          |
-| `base`   | `string`  | `undefined`  | 新 worktree 的基础分支     |
-| `exec`   | `string`  | `undefined`  | 创建后执行的命令           |
-| `noCd`   | `boolean` | `false`      | 不更改目录                 |
+| 属性   | 类型      | 默认值      | 描述                   |
+| ------ | --------- | ----------- | ---------------------- |
+| `name` | `string`  | （必需）    | worktree/分支名称      |
+| `base` | `string`  | `undefined` | 新 worktree 的基础分支 |
+| `exec` | `string`  | `undefined` | 创建后执行的命令       |
+| `noCd` | `boolean` | `false`     | 不更改目录             |
 
 **返回：** `Promise<SwitchResult>`
 
@@ -164,10 +169,10 @@ const result = await wt.remove('old-branch')
 
 **选项对象：**
 
-| 属性         | 类型      | 默认值       | 描述                             |
-| ------------ | --------- | ------------ | -------------------------------- |
-| `name`       | `string`  | `undefined`  | 要删除的 worktree 名称            |
-| `keepBranch` | `boolean` | `false`      | 删除 worktree 后保留分支          |
+| 属性         | 类型      | 默认值      | 描述                     |
+| ------------ | --------- | ----------- | ------------------------ |
+| `name`       | `string`  | `undefined` | 要删除的 worktree 名称   |
+| `keepBranch` | `boolean` | `false`     | 删除 worktree 后保留分支 |
 
 **返回：** `Promise<RemoveResult>`
 
@@ -241,10 +246,10 @@ const result = await wt.merge()
 
 **选项对象：**
 
-| 属性           | 类型      | 默认值       | 描述                     |
-| -------------- | --------- | ------------ | ------------------------ |
-| `target`       | `string`  | `'main'`     | 要合并到的目标分支       |
-| `keepWorktree` | `boolean` | `false`      | 合并后保留 worktree      |
+| 属性           | 类型      | 默认值   | 描述                |
+| -------------- | --------- | -------- | ------------------- |
+| `target`       | `string`  | `'main'` | 要合并到的目标分支  |
+| `keepWorktree` | `boolean` | `false`  | 合并后保留 worktree |
 
 **返回：** `Promise<MergeResult>`
 
@@ -281,14 +286,14 @@ const result = await wt.hook({ type: 'post-create' })
 
 **选项对象：**
 
-| 属性           | 类型                          | 默认值       | 描述                  |
-| -------------- | ----------------------------- | ------------ | --------------------- |
-| `type`         | `HookType`                    | （必需）     | 要运行的钩子类型      |
-| `name`         | `string`                      | `undefined`  | 要运行的命名钩子      |
-| `userOnly`     | `boolean`                     | `false`      | 仅运行用户钩子        |
-| `projectOnly`  | `boolean`                     | `false`      | 仅运行项目钩子        |
-| `yes`          | `boolean`                     | `false`      | 跳过确认              |
-| `vars`         | `Record<string, string>`      | `{}`         | 传递给钩子的变量      |
+| 属性          | 类型                     | 默认值      | 描述             |
+| ------------- | ------------------------ | ----------- | ---------------- |
+| `type`        | `HookType`               | （必需）    | 要运行的钩子类型 |
+| `name`        | `string`                 | `undefined` | 要运行的命名钩子 |
+| `userOnly`    | `boolean`                | `false`     | 仅运行用户钩子   |
+| `projectOnly` | `boolean`                | `false`     | 仅运行项目钩子   |
+| `yes`         | `boolean`                | `false`     | 跳过确认         |
+| `vars`        | `Record<string, string>` | `{}`        | 传递给钩子的变量 |
 
 **钩子类型：** `'post-create' | 'post-switch' | 'pre-merge' | 'post-merge' | 'pre-remove' | 'post-remove'`
 

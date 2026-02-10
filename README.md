@@ -22,15 +22,20 @@ cargo install worktrunk
 ```typescript
 import { worktrunk } from 'simple-worktrunk'
 const wt = worktrunk()
+
 // Create a new worktree
 await wt.create('feature-auth')
+
 // List all worktrees
 const { worktrees, current } = await wt.list()
+
 console.log(current) // 'feature-auth'
 // Switch to another worktree
 await wt.switch('main')
+
 // When done, merge and cleanup
 await wt.merge()
+
 // Remove a worktree
 await wt.remove('old-branch')
 ```

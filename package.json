@@ -1,6 +1,6 @@
 {
   "name": "simple-worktrunk",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A lightweight wrapper for worktrunk CLI",
   "type": "module",
   "main": "./dist/index.js",
@@ -11,7 +11,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "README.zh-CN.md"
   ],
   "keywords": [
     "worktrunk",

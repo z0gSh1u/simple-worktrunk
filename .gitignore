@@ -7,3 +7,4 @@ coverage/
 .worktrees/
 test/fixtures/.repos/
 playground/repo/
+.docs
