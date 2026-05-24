@@ -40,6 +40,7 @@ function normalizeOptions(options: WorktrunkOptions | string = {}): NormalizedOp
   return {
     binary: options.binary || 'wt',
     baseDir: options.baseDir,
+    configPath: options.configPath,
   };
 }
 

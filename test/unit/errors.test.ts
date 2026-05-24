@@ -3,6 +3,7 @@ import {
   WorktrunkError,
   BinaryNotFoundError,
   CommandFailedError,
+  JsonParseError,
 } from '../../src/errors.js';
 
 describe('WorktrunkError', () => {
@@ -73,5 +74,36 @@ describe('CommandFailedError', () => {
     expect(error.message).toContain('wt');
     expect(error.message).toContain('1');
     expect(error.code).toBe('1');
+  });
+
+  it('CommandFailedError exposes command diagnostics', () => {
+    const error = new CommandFailedError({
+      command: 'wt list --format=json',
+      args: ['list', '--format=json'],
+      exitCode: 2,
+      stdout: 'partial stdout',
+      stderr: 'fatal error',
+    });
+
+    expect(error.command).toBe('wt list --format=json');
+    expect(error.args).toEqual(['list', '--format=json']);
+    expect(error.code).toBe('2');
+    expect(error.exitCode).toBe(2);
+    expect(error.stdout).toBe('partial stdout');
+    expect(error.stderr).toBe('fatal error');
+  });
+});
+
+describe('JsonParseError', () => {
+  it('JsonParseError includes output previews', () => {
+    const error = new JsonParseError({
+      command: 'wt switch --format=json @',
+      stdout: 'not json',
+      stderr: 'warning',
+    });
+
+    expect(error.command).toBe('wt switch --format=json @');
+    expect(error.stdoutPreview).toBe('not json');
+    expect(error.stderrPreview).toBe('warning');
   });
 });

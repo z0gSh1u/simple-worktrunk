@@ -104,10 +104,18 @@ export interface HookShowResult {
 export interface WorktrunkOptions {
   binary?: string;
   baseDir?: string;
+  configPath?: string;
 }
 
 // Normalized options (internal)
 export interface NormalizedOptions {
   binary: string;
   baseDir?: string;
+  configPath?: string;
+}
+
+export interface CommandOptions {
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
+  signal?: AbortSignal;
 }
