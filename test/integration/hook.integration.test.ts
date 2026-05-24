@@ -1,3 +1,4 @@
+import './version-guard.js';
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestRepo } from '../fixtures/test-repo.js';
 import { worktrunk } from '../../src/index.js';

@@ -1,3 +1,4 @@
+import './version-guard.js';
 import { describe, expect, it, beforeEach, afterEach } from 'vitest';
 import { rmSync, existsSync } from 'node:fs';
 import { worktrunk } from '../../src/index.js';
