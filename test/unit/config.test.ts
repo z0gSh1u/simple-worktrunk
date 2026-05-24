@@ -44,4 +44,8 @@ describe('parseStateVarsListOutput', () => {
   it('extracts keys from tabular list output', () => {
     expect(parseStateVarsListOutput('env\tstaging\nport\t3000\n')).toEqual(['env', 'port']);
   });
+
+  it('returns an empty list for worktrunk empty-state output', () => {
+    expect(parseStateVarsListOutput('○ No variables for master\n')).toEqual([]);
+  });
 });

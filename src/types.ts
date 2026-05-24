@@ -101,7 +101,7 @@ export interface RemoveOptions {
 
 export interface RemoveResult {
   removed: Array<{ branch?: string; path?: string }>;
-  raw: Record<string, unknown>;
+  raw: unknown;
 }
 
 export interface MergeOptions {

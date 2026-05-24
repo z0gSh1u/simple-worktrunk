@@ -7,7 +7,7 @@ export async function removeCommand(
   options?: RemoveOptions | string
 ): Promise<RemoveResult> {
   const opts = typeof options === 'string' ? { branches: [options] } : options ?? {};
-  const result = await executeJson<Record<string, unknown>>(buildRemoveArgs(opts), this.options);
+  const result = await executeJson<unknown>(buildRemoveArgs(opts), this.options);
   return mapRemoveResult(result);
 }
 
@@ -22,19 +22,30 @@ export function buildRemoveArgs(options: RemoveOptions = {}): string[] {
   return args;
 }
 
-export function mapRemoveResult(raw: Record<string, unknown>): RemoveResult {
-  const removedValue = raw.removed;
-  const removed = Array.isArray(removedValue)
-    ? removedValue.map((item) => {
-      const entry = isRecord(item) ? item : {};
-      return {
-        branch: entry.branch as string | undefined,
-        path: entry.path as string | undefined,
-      };
-    })
-    : [{ branch: raw.branch as string | undefined, path: raw.path as string | undefined }];
+export function mapRemoveResult(raw: unknown): RemoveResult {
+  const entries = getRemovedEntries(raw);
+  const removed = entries.map((entry) => ({
+    branch: entry.branch as string | undefined,
+    path: entry.path as string | undefined,
+  }));
 
   return { removed, raw };
+}
+
+function getRemovedEntries(raw: unknown): Array<Record<string, unknown>> {
+  if (Array.isArray(raw)) {
+    return raw.filter(isRecord);
+  }
+
+  if (!isRecord(raw)) {
+    return [];
+  }
+
+  if (Array.isArray(raw.removed)) {
+    return raw.removed.filter(isRecord);
+  }
+
+  return [raw];
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

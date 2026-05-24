@@ -97,5 +97,6 @@ export function parseStateVarsListOutput(output: string): string[] {
     .trim()
     .split(/\r?\n/)
     .filter(Boolean)
+    .filter((line) => !line.startsWith('○ No variables'))
     .map((line) => line.split(/\s+/, 1)[0]);
 }

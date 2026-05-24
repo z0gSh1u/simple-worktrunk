@@ -3,6 +3,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestRepo } from '../fixtures/test-repo.js';
 import { worktrunk } from '../../src/index.js';
 import { rmSync, existsSync } from 'node:fs';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
 describe('hook (integration)', () => {
   let repo: TestRepo;
@@ -19,11 +21,18 @@ describe('hook (integration)', () => {
   });
 
   it('shows configured hooks', async () => {
+    const configDir = join(repo.path, '.config');
+    await mkdir(configDir, { recursive: true });
+    await writeFile(join(configDir, 'wt.toml'), '[post-start]\ndev = "echo dev"\n', 'utf8');
+
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
     const result = await wt.hook.show();
 
-    expect(result.hooks).toBeDefined();
-    expect(typeof result.hooks).toBe('object');
+    expect(result.hooks['post-start']).toContainEqual({
+      name: 'dev',
+      command: 'echo dev',
+      source: 'project',
+    });
   });
 
   it('treats missing hook configuration as a no-op success', async () => {

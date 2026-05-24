@@ -71,7 +71,7 @@ describe('parseListOutput', () => {
     expect(result.worktrees[0].path).toBe('/路径/feature');
   });
 
-  it('should filter out non-worktree items', () => {
+  it('should preserve non-worktree items from branch and remote listing modes', () => {
     const output = JSON.stringify([
       {
         branch: 'main',
@@ -81,17 +81,21 @@ describe('parseListOutput', () => {
         is_current: true,
       },
       {
-        branch: 'bare',
-        path: '/repo/.git/worktrees/bare',
-        kind: 'bare',
+        branch: 'branch-only',
+        kind: 'branch',
         is_main: false,
         is_current: false,
       },
     ]);
     const result = parseListOutput(output);
 
-    expect(result.worktrees).toHaveLength(1);
+    expect(result.worktrees).toHaveLength(2);
     expect(result.worktrees[0].branch).toBe('main');
+    expect(result.worktrees[1]).toMatchObject({
+      branch: 'branch-only',
+      path: '',
+      kind: 'branch',
+    });
   });
 
   it('should identify main worktree', () => {
@@ -198,6 +202,27 @@ describe('parseHookShowOutput', () => {
 
     // The parser captures the literal content between quotes, including escaped quotes
     expect(result.hooks['post-start'][0].command).toBe('echo \\"hello world\\"');
+  });
+
+  it('parses real worktrunk 0.53 hook show output', () => {
+    const output = [
+      'USER HOOKS @ ~/.config/worktrunk/config.toml',
+      '↳ (none configured)',
+      '',
+      'PROJECT HOOKS @ /repo/.config/wt.toml',
+      '❯ post-start dev: (requires approval)',
+      '  echo dev',
+      '❯ pre-merge lint: (requires approval)',
+      '  pnpm lint',
+    ].join('\n');
+    const result = parseHookShowOutput(output);
+
+    expect(result.hooks['post-start']).toEqual([
+      { name: 'dev', command: 'echo dev', source: 'project' },
+    ]);
+    expect(result.hooks['pre-merge']).toEqual([
+      { name: 'lint', command: 'pnpm lint', source: 'project' },
+    ]);
   });
 });
 

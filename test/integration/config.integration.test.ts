@@ -33,7 +33,7 @@ describe('config (integration)', () => {
     expect(await wt.config.state.vars.get('env')).toBe('staging');
     expect(await wt.config.state.vars.list()).toContain('env');
     await wt.config.state.vars.clear('env');
-    expect(await wt.config.state.vars.list()).not.toContain('env');
+    expect(await wt.config.state.vars.list()).toEqual([]);
   });
 
   it('reads logs json', async () => {

@@ -8,9 +8,7 @@ export async function listCommand(
   options: ListOptions = {}
 ): Promise<ListResult> {
   const data = await executeJson<any[]>(buildListArgs(options), this.options);
-  const worktrees = data
-    .filter((item) => item.kind === 'worktree')
-    .map(mapListItem);
+  const worktrees = data.map(mapListItem);
   const current = worktrees.find((worktree) => worktree.isCurrent)?.branch ?? '';
 
   return { worktrees, current };

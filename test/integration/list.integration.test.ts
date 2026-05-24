@@ -54,4 +54,16 @@ describe('list (integration)', () => {
     expect(mainWorktree).toBeDefined();
     expect(mainWorktree?.path).toContain('/main');
   });
+
+  it('should include branch entries when branches option is enabled', async () => {
+    await repo.git.branch(['branch-only']);
+
+    const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
+    const result = await wt.list({ branches: true });
+
+    expect(result.worktrees).toContainEqual(expect.objectContaining({
+      branch: 'branch-only',
+      kind: 'branch',
+    }));
+  });
 });

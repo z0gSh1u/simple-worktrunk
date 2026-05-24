@@ -4,8 +4,10 @@
   "description": "A TypeScript SDK wrapper for worktrunk 0.53+",
   "type": "module",
   "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },

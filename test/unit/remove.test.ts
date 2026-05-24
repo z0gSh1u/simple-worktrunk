@@ -33,8 +33,17 @@ describe('mapRemoveResult', () => {
     });
   });
 
-  it('normalizes array remove json shapes', () => {
+  it('normalizes nested array remove json shapes', () => {
     const raw = { removed: [{ branch: 'old-a', path: '/repo/old-a' }] };
+
+    expect(mapRemoveResult(raw)).toEqual({
+      removed: [{ branch: 'old-a', path: '/repo/old-a' }],
+      raw,
+    });
+  });
+
+  it('normalizes root array remove json shapes from worktrunk 0.53', () => {
+    const raw = [{ branch: 'old-a', path: '/repo/old-a' }];
 
     expect(mapRemoveResult(raw)).toEqual({
       removed: [{ branch: 'old-a', path: '/repo/old-a' }],

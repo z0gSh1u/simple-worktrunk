@@ -26,7 +26,10 @@ describe('remove (integration)', () => {
     const result = await wt.remove({ branches: ['to-remove'] });
 
     expect(result.raw).toBeDefined();
-    expect(result.removed.length).toBeGreaterThanOrEqual(1);
+    expect(result.removed).toContainEqual(expect.objectContaining({
+      branch: 'to-remove',
+      path: expect.stringContaining('to-remove'),
+    }));
 
     // Verify worktree is gone
     const worktrees = await repo.getGitWorktrees();
@@ -52,7 +55,10 @@ describe('remove (integration)', () => {
     const result = await wt.remove({ branches: ['keep-branch'], keepBranch: true });
 
     expect(result.raw).toBeDefined();
-    expect(result.removed.length).toBeGreaterThanOrEqual(1);
+    expect(result.removed).toContainEqual(expect.objectContaining({
+      branch: 'keep-branch',
+      path: expect.stringContaining('keep-branch'),
+    }));
 
     // Verify branch still exists
     const branches = await repo.git.branch();
