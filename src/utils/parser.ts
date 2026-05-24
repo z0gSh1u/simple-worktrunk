@@ -32,10 +32,12 @@ export function parseListOutput(stdout: string): ListResult {
       if (item.kind !== 'worktree') continue;
 
       worktrees.push({
-        name: item.branch,
         path: item.path,
         branch: item.branch,
+        kind: item.kind,
         isMain: item.is_main || false,
+        isCurrent: item.is_current || false,
+        isPrevious: item.is_previous || false,
       });
 
       if (item.is_current) {

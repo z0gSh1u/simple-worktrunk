@@ -15,10 +15,10 @@ describe('index', () => {
 
   it('should export command option types', () => {
     const options: CommandOptions = {
-      cwd: '/tmp',
+      allowNonZeroExit: true,
     };
 
-    expect(options.cwd).toBe('/tmp');
+    expect(options.allowNonZeroExit).toBe(true);
   });
 
   it('should create instance', () => {
@@ -29,7 +29,12 @@ describe('index', () => {
     expect(wt).toHaveProperty('list');
     expect(wt).toHaveProperty('merge');
     expect(wt).toHaveProperty('hook');
-    expect(wt).toHaveProperty('hookShow');
+    expect(wt.hook).toHaveProperty('run');
+    expect(wt.hook).toHaveProperty('show');
+    expect(wt).toHaveProperty('step');
+    expect(wt).toHaveProperty('config');
+    expect(wt).toHaveProperty('raw');
+    expect(wt).not.toHaveProperty('hookShow');
   });
 
   it('should accept custom binary path', () => {

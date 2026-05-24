@@ -2,12 +2,6 @@ import type { WorktrunkInstance } from '../worktrunk.js';
 import type { MergeOptions, MergeResult } from '../types.js';
 import { execCommandWithStderr } from '../utils/executor.js';
 
-declare module '../worktrunk.js' {
-  interface WorktrunkInstance {
-    merge(options?: MergeOptions): Promise<MergeResult>;
-  }
-}
-
 export async function mergeCommand(
   this: WorktrunkInstance,
   options?: MergeOptions
@@ -17,7 +11,7 @@ export async function mergeCommand(
 
   const args = ['merge', '-y'];
 
-  if (opts.keepWorktree) {
+  if (opts.remove === false) {
     args.push('--no-remove');
   }
 
@@ -28,8 +22,7 @@ export async function mergeCommand(
   const result = await execCommandWithStderr(args, config);
 
   return {
-    merged: 'current',
     target: opts.target || 'main',
-    worktreeRemoved: !opts.keepWorktree,
+    raw: { stdout: result.stdout, stderr: result.stderr },
   };
 }

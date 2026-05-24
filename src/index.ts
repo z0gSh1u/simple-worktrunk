@@ -1,22 +1,3 @@
-export type {
-  SwitchOptions,
-  SwitchResult,
-  CreateOptions,
-  RemoveOptions,
-  RemoveResult,
-  ListResult,
-  WorktreeInfo,
-  MergeOptions,
-  MergeResult,
-  HookType,
-  HookOptions,
-  HookResult,
-  HookExecution,
-  HookShowResult,
-  NamedHook,
-  WorktrunkOptions,
-  CommandOptions,
-} from './types.js';
 export {
   WorktrunkError,
   BinaryNotFoundError,
@@ -24,11 +5,40 @@ export {
   JsonParseError,
 } from './errors.js';
 
-// Main factory function
+export type {
+  CommandOptions,
+  ConfigShowOptions,
+  CreateOptions,
+  HookRunOptions,
+  HookShowResult,
+  HookType,
+  ListOptions,
+  ListResult,
+  MergeOptions,
+  MergeResult,
+  NamedHook,
+  RemoveOptions,
+  RemoveResult,
+  StageMode,
+  StateVarOptions,
+  StepCommandOptions,
+  StepCommitOptions,
+  StepPruneOptions,
+  StepSquashOptions,
+  StepTargetOptions,
+  SwitchAction,
+  SwitchOptions,
+  SwitchResult,
+  WorktreeInfo,
+  WorktrunkOptions,
+} from './types.js';
+
 import { createWorktrunkInstance } from './worktrunk.js';
 
 export { createWorktrunkInstance };
 
-export function worktrunk(options?: string | import('./types.js').WorktrunkOptions): import('./worktrunk.js').WorktrunkInstance {
+export function worktrunk(
+  options?: string | import('./types.js').WorktrunkOptions
+): import('./worktrunk.js').WorktrunkInstance {
   return createWorktrunkInstance(options);
 }

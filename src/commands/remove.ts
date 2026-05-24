@@ -2,17 +2,11 @@ import type { WorktrunkInstance } from '../worktrunk.js';
 import type { RemoveOptions, RemoveResult } from '../types.js';
 import { execCommandWithStderr } from '../utils/executor.js';
 
-declare module '../worktrunk.js' {
-  interface WorktrunkInstance {
-    remove(options?: RemoveOptions | string): Promise<RemoveResult>;
-  }
-}
-
 export async function removeCommand(
   this: WorktrunkInstance,
   options?: RemoveOptions | string
 ): Promise<RemoveResult> {
-  const opts = typeof options === 'string' ? { name: options } : options;
+  const opts = typeof options === 'string' ? { branches: [options] } : options;
   const { options: config } = this;
 
   const args = ['remove', '--foreground', '-y', '-f'];
@@ -21,14 +15,14 @@ export async function removeCommand(
     args.push('--no-delete-branch');
   }
 
-  if (opts?.name) {
-    args.push(opts.name);
+  if (opts?.branches?.length) {
+    args.push(...opts.branches);
   }
 
   const result = await execCommandWithStderr(args, config);
 
   return {
-    removed: opts?.name || 'current',
-    branchDeleted: !opts?.keepBranch,
+    removed: (opts?.branches || ['current']).map((branch) => ({ branch })),
+    raw: { stdout: result.stdout, stderr: result.stderr },
   };
 }

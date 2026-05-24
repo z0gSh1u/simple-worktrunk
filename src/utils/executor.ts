@@ -45,7 +45,7 @@ export async function execute(
   });
   const command = formatCommand(binary, fullArgs);
 
-  if (result.exitCode !== 0) {
+  if (result.exitCode !== 0 && !commandOptions.allowNonZeroExit) {
     throw new CommandFailedError({
       command,
       args: fullArgs,

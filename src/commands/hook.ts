@@ -1,33 +1,18 @@
 import type { WorktrunkInstance } from '../worktrunk.js';
-import type { HookOptions, HookResult, HookShowResult } from '../types.js';
+import type { HookRunOptions, HookResult, HookShowResult } from '../types.js';
 import { execCommand } from '../utils/executor.js';
 import { parseHookShowOutput } from '../utils/parser.js';
 
-declare module '../worktrunk.js' {
-  interface WorktrunkInstance {
-    hook(options: HookOptions): Promise<HookResult>;
-    hookShow(): Promise<HookShowResult>;
-  }
-}
-
 export async function hookCommand(
   this: WorktrunkInstance,
-  options: HookOptions
+  options: HookRunOptions
 ): Promise<HookResult> {
   const { options: config } = this;
 
   const args = ['hook', options.type];
 
-  if (options.name) {
-    args.push(options.name);
-  }
-
-  if (options.userOnly) {
-    args.push('user:');
-  }
-
-  if (options.projectOnly) {
-    args.push('project:');
+  if (options.names?.length) {
+    args.push(...options.names);
   }
 
   if (options.yes) {
@@ -44,7 +29,8 @@ export async function hookCommand(
 
   return {
     hook: options.type,
-    executed: [],
+    stdout: '',
+    stderr: '',
   };
 }
 

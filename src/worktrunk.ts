@@ -1,35 +1,79 @@
 import type {
-  NormalizedOptions,
-  WorktrunkOptions,
-  SwitchOptions,
-  SwitchResult,
+  CommandOptions,
+  ConfigShowOptions,
   CreateOptions,
-  RemoveOptions,
-  RemoveResult,
+  HookResult,
+  HookRunOptions,
+  HookShowResult,
+  ListOptions,
   ListResult,
   MergeOptions,
   MergeResult,
-  HookOptions,
-  HookResult,
-  HookShowResult
+  NormalizedOptions,
+  RemoveOptions,
+  RemoveResult,
+  StateVarOptions,
+  StepCommandOptions,
+  StepCommitOptions,
+  StepPruneOptions,
+  StepSquashOptions,
+  StepTargetOptions,
+  SwitchOptions,
+  SwitchResult,
+  WorktrunkOptions,
 } from './types.js';
+import { rawCommand } from './commands/raw.js';
+import type { ExecResult } from './utils/executor.js';
 
-// Direct imports to avoid circular dependency
-import { switchCommand, createCommand } from './commands/switch.js';
-import { removeCommand } from './commands/remove.js';
-import { listCommand } from './commands/list.js';
-import { mergeCommand } from './commands/merge.js';
-import { hookCommand, hookShowCommand } from './commands/hook.js';
+export interface HookNamespace {
+  run(options: HookRunOptions): Promise<HookResult>;
+  show(): Promise<HookShowResult>;
+}
 
-// Define the instance interface with explicit method signatures
+export interface StepNamespace {
+  commit(options?: StepCommitOptions): Promise<ExecResult>;
+  squash(options?: StepSquashOptions): Promise<ExecResult>;
+  rebase(options?: StepTargetOptions): Promise<ExecResult>;
+  push(options?: StepTargetOptions): Promise<ExecResult>;
+  diff(options?: StepTargetOptions): Promise<ExecResult>;
+  prune(options?: StepPruneOptions): Promise<ExecResult>;
+  tether(options: StepCommandOptions): Promise<ExecResult>;
+  forEach(options: StepCommandOptions): Promise<ExecResult>;
+  eval(expression: string): Promise<string>;
+  raw(args: string[], options?: CommandOptions): Promise<ExecResult>;
+}
+
+export interface ConfigNamespace {
+  show(options?: ConfigShowOptions): Promise<unknown>;
+  state: {
+    vars: {
+      list(options?: StateVarOptions): Promise<string[]>;
+      get(key: string, options?: StateVarOptions): Promise<string>;
+      set(key: string, value: string, options?: StateVarOptions): Promise<ExecResult>;
+      clear(key: string, options?: StateVarOptions): Promise<ExecResult>;
+      clearAll(options?: StateVarOptions): Promise<ExecResult>;
+    };
+    logs(): Promise<unknown>;
+  };
+  plugins: {
+    codex: {
+      install(): Promise<ExecResult>;
+      uninstall(): Promise<ExecResult>;
+    };
+  };
+  raw(args: string[], options?: CommandOptions): Promise<ExecResult>;
+}
+
 export interface WorktrunkInstance {
   switch(options?: string | SwitchOptions): Promise<SwitchResult>;
   create(options: string | CreateOptions): Promise<SwitchResult>;
   remove(options?: string | RemoveOptions): Promise<RemoveResult>;
-  list(): Promise<ListResult>;
+  list(options?: ListOptions): Promise<ListResult>;
   merge(options?: MergeOptions): Promise<MergeResult>;
-  hook(options: HookOptions): Promise<HookResult>;
-  hookShow(): Promise<HookShowResult>;
+  hook: HookNamespace;
+  step: StepNamespace;
+  config: ConfigNamespace;
+  raw(args: string[], options?: CommandOptions): Promise<ExecResult>;
   options: NormalizedOptions;
 }
 
@@ -46,34 +90,55 @@ function normalizeOptions(options: WorktrunkOptions | string = {}): NormalizedOp
 
 export function createWorktrunkInstance(options: WorktrunkOptions | string = {}): WorktrunkInstance {
   const normalized = normalizeOptions(options);
+  const baseInstance = { options: normalized } as WorktrunkInstance;
 
-  // Create a base instance to serve as the 'this' context
-  const baseInstance = {
-    options: normalized,
+  const notImplemented = async (): Promise<any> => {
+    throw new Error('Command not implemented yet');
   };
 
   return {
     options: normalized,
-    switch: function(opts?: string | SwitchOptions) {
-      return switchCommand.call(baseInstance as any, opts || {});
+    switch: notImplemented,
+    create: notImplemented,
+    remove: notImplemented,
+    list: notImplemented,
+    merge: notImplemented,
+    hook: {
+      run: notImplemented,
+      show: notImplemented,
     },
-    create: function(opts: string | CreateOptions) {
-      return createCommand.call(baseInstance as any, opts);
+    step: {
+      commit: notImplemented,
+      squash: notImplemented,
+      rebase: notImplemented,
+      push: notImplemented,
+      diff: notImplemented,
+      prune: notImplemented,
+      tether: notImplemented,
+      forEach: notImplemented,
+      eval: notImplemented,
+      raw: (args, opts) => rawCommand.call(baseInstance, ['step', ...args], opts),
     },
-    remove: function(opts?: string | RemoveOptions) {
-      return removeCommand.call(baseInstance as any, opts || {});
+    config: {
+      show: notImplemented,
+      state: {
+        vars: {
+          list: notImplemented,
+          get: notImplemented,
+          set: notImplemented,
+          clear: notImplemented,
+          clearAll: notImplemented,
+        },
+        logs: notImplemented,
+      },
+      plugins: {
+        codex: {
+          install: notImplemented,
+          uninstall: notImplemented,
+        },
+      },
+      raw: (args, opts) => rawCommand.call(baseInstance, ['config', ...args], opts),
     },
-    list: function() {
-      return listCommand.call(baseInstance as any);
-    },
-    merge: function(opts?: MergeOptions) {
-      return mergeCommand.call(baseInstance as any, opts || {});
-    },
-    hook: function(opts: HookOptions) {
-      return hookCommand.call(baseInstance as any, opts);
-    },
-    hookShow: function() {
-      return hookShowCommand.call(baseInstance as any);
-    },
+    raw: (args, opts) => rawCommand.call(baseInstance, args, opts),
   };
 }

@@ -1,53 +1,88 @@
-// Hook types
+export type StageMode = 'all' | 'tracked' | 'none';
+export type OutputFormat = 'text' | 'json';
+
+export interface CommandOptions {
+  allowNonZeroExit?: boolean;
+  cwd?: string;
+  env?: NodeJS.ProcessEnv;
+  signal?: AbortSignal;
+}
+
 export type HookType =
-  | 'post-create'
+  | 'pre-switch'
   | 'post-switch'
+  | 'pre-start'
+  | 'post-start'
+  | 'pre-commit'
+  | 'post-commit'
   | 'pre-merge'
   | 'post-merge'
   | 'pre-remove'
   | 'post-remove';
 
-// Switch options and result
 export interface SwitchOptions {
-  name?: string;
+  branch?: string;
   create?: boolean;
   base?: string;
-  exec?: string;
+  execute?: string | string[];
+  executeArgs?: string[];
+  branches?: boolean;
+  remotes?: boolean;
+  clobber?: boolean;
   noCd?: boolean;
+  noHooks?: boolean;
+  yes?: boolean;
 }
+
+export interface CreateOptions extends Omit<SwitchOptions, 'create'> {
+  branch: string;
+}
+
+export type SwitchAction = 'created' | 'switched' | 'already_at' | string;
 
 export interface SwitchResult {
-  worktree: string;
-  path: string;
+  action: SwitchAction;
   branch: string;
-  created: boolean;
+  path: string;
 }
 
-// Create options (alias for switch with create=true)
-export interface CreateOptions {
-  name: string;
-  base?: string;
-  exec?: string;
-  noCd?: boolean;
+export interface ListOptions {
+  full?: boolean;
+  branches?: boolean;
+  remotes?: boolean;
 }
 
-// Remove options and result
-export interface RemoveOptions {
-  name?: string;
-  keepBranch?: boolean;
-}
-
-export interface RemoveResult {
-  removed: string;
-  branchDeleted: boolean;
-}
-
-// List result
 export interface WorktreeInfo {
-  name: string;
-  path: string;
   branch: string;
+  path: string;
+  kind: 'worktree' | string;
   isMain: boolean;
+  isCurrent: boolean;
+  isPrevious: boolean;
+  commit?: {
+    sha: string;
+    shortSha: string;
+    message: string;
+    timestamp: number;
+  };
+  workingTree?: {
+    staged: boolean;
+    modified: boolean;
+    untracked: boolean;
+    renamed: boolean;
+    deleted: boolean;
+    diff?: { added: number; deleted: number };
+  };
+  mainState?: string;
+  integrationReason?: string;
+  remote?: { name: string; branch: string; ahead: number; behind: number };
+  main?: { ahead: number; behind: number };
+  ci?: unknown;
+  url?: string;
+  summary?: string;
+  vars?: Record<string, unknown>;
+  statusline?: string;
+  symbols?: string;
 }
 
 export interface ListResult {
@@ -55,41 +90,55 @@ export interface ListResult {
   current: string;
 }
 
-// Merge options and result
+export interface RemoveOptions {
+  branches?: string[];
+  keepBranch?: boolean;
+  force?: boolean;
+  forceDelete?: boolean;
+  noHooks?: boolean;
+  yes?: boolean;
+}
+
+export interface RemoveResult {
+  removed: Array<{ branch?: string; path?: string }>;
+  raw: Record<string, unknown>;
+}
+
 export interface MergeOptions {
   target?: string;
-  keepWorktree?: boolean;
+  squash?: boolean;
+  commit?: boolean;
+  rebase?: boolean;
+  remove?: boolean;
+  ff?: boolean;
+  stage?: StageMode;
+  noHooks?: boolean;
+  yes?: boolean;
 }
 
 export interface MergeResult {
-  merged: string;
-  target: string;
-  worktreeRemoved: boolean;
+  target?: string;
+  source?: string;
+  branch?: string;
+  path?: string;
+  raw: Record<string, unknown>;
 }
 
-// Hook options and result
-export interface HookOptions {
+export interface HookRunOptions {
   type: HookType;
-  name?: string;
-  userOnly?: boolean;
-  projectOnly?: boolean;
+  names?: string[];
+  foreground?: boolean;
+  dryRun?: boolean;
   yes?: boolean;
   vars?: Record<string, string>;
 }
 
-export interface HookExecution {
-  name: string;
-  source: 'user' | 'project';
-  success: boolean;
-  output?: string;
-}
-
 export interface HookResult {
-  hook: string;
-  executed: HookExecution[];
+  hook: HookType;
+  stdout: string;
+  stderr: string;
 }
 
-// Hook show result
 export interface NamedHook {
   name?: string;
   command: string;
@@ -100,22 +149,51 @@ export interface HookShowResult {
   hooks: Record<string, NamedHook[]>;
 }
 
-// Worktrunk instance options
+export interface StepCommitOptions {
+  branch?: string;
+  stage?: StageMode;
+  dryRun?: boolean;
+  noHooks?: boolean;
+}
+
+export interface StepSquashOptions {
+  target?: string;
+  stage?: StageMode;
+  dryRun?: boolean;
+  noHooks?: boolean;
+}
+
+export interface StepTargetOptions {
+  target?: string;
+}
+
+export interface StepPruneOptions {
+  dryRun?: boolean;
+  minAge?: string;
+  foreground?: boolean;
+}
+
+export interface StepCommandOptions {
+  command: string[];
+}
+
+export interface ConfigShowOptions {
+  full?: boolean;
+  format?: OutputFormat;
+}
+
+export interface StateVarOptions {
+  branch?: string;
+}
+
 export interface WorktrunkOptions {
   binary?: string;
   baseDir?: string;
   configPath?: string;
 }
 
-// Normalized options (internal)
 export interface NormalizedOptions {
   binary: string;
   baseDir?: string;
   configPath?: string;
-}
-
-export interface CommandOptions {
-  cwd?: string;
-  env?: NodeJS.ProcessEnv;
-  signal?: AbortSignal;
 }
