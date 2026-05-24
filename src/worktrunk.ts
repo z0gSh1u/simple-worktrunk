@@ -40,6 +40,17 @@ import {
   stepSquashCommand,
   stepTetherCommand,
 } from './commands/step.js';
+import {
+  codexInstallCommand,
+  codexUninstallCommand,
+  configShowCommand,
+  stateLogsCommand,
+  stateVarsClearAllCommand,
+  stateVarsClearCommand,
+  stateVarsGetCommand,
+  stateVarsListCommand,
+  stateVarsSetCommand,
+} from './commands/config.js';
 
 export interface HookNamespace {
   run(options: HookRunOptions): Promise<HookResult>;
@@ -108,10 +119,6 @@ export function createWorktrunkInstance(options: WorktrunkOptions | string = {})
   const normalized = normalizeOptions(options);
   const baseInstance = { options: normalized } as WorktrunkInstance;
 
-  const notImplemented = async (): Promise<any> => {
-    throw new Error('Command not implemented yet');
-  };
-
   return {
     options: normalized,
     switch: (opts) => switchCommand.call(baseInstance, opts ?? {}),
@@ -136,21 +143,21 @@ export function createWorktrunkInstance(options: WorktrunkOptions | string = {})
       raw: (args, opts) => rawCommand.call(baseInstance, ['step', ...args], opts),
     },
     config: {
-      show: notImplemented,
+      show: (opts) => configShowCommand.call(baseInstance, opts ?? {}),
       state: {
         vars: {
-          list: notImplemented,
-          get: notImplemented,
-          set: notImplemented,
-          clear: notImplemented,
-          clearAll: notImplemented,
+          list: (opts) => stateVarsListCommand.call(baseInstance, opts ?? {}),
+          get: (key, opts) => stateVarsGetCommand.call(baseInstance, key, opts ?? {}),
+          set: (key, value, opts) => stateVarsSetCommand.call(baseInstance, key, value, opts ?? {}),
+          clear: (key, opts) => stateVarsClearCommand.call(baseInstance, key, opts ?? {}),
+          clearAll: (opts) => stateVarsClearAllCommand.call(baseInstance, opts ?? {}),
         },
-        logs: notImplemented,
+        logs: () => stateLogsCommand.call(baseInstance),
       },
       plugins: {
         codex: {
-          install: notImplemented,
-          uninstall: notImplemented,
+          install: () => codexInstallCommand.call(baseInstance),
+          uninstall: () => codexUninstallCommand.call(baseInstance),
         },
       },
       raw: (args, opts) => rawCommand.call(baseInstance, ['config', ...args], opts),
