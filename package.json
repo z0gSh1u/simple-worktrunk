@@ -1,7 +1,7 @@
 {
   "name": "simple-worktrunk",
-  "version": "0.1.0",
-  "description": "A lightweight wrapper for worktrunk CLI",
+  "version": "0.2.0",
+  "description": "A TypeScript SDK wrapper for worktrunk 0.53+",
   "type": "module",
   "main": "./dist/index.js",
   "exports": {

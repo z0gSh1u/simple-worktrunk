@@ -143,12 +143,12 @@ describe('parseListOutput', () => {
 
 describe('parseHookShowOutput', () => {
   it('should parse hook sections', () => {
-    const output = '[post-create]\ntest = "npm install"\n[post-switch]\ncleanup = "rm -rf node_modules"';
+    const output = '[post-start]\ntest = "npm install"\n[post-switch]\ncleanup = "rm -rf node_modules"';
 
     const result = parseHookShowOutput(output);
 
-    expect(result.hooks['post-create']).toHaveLength(1);
-    expect(result.hooks['post-create'][0]).toEqual({
+    expect(result.hooks['post-start']).toHaveLength(1);
+    expect(result.hooks['post-start'][0]).toEqual({
       name: 'test',
       command: 'npm install',
       source: 'project',
@@ -168,24 +168,24 @@ describe('parseHookShowOutput', () => {
   });
 
   it('should handle sections without hooks', () => {
-    const output = '[post-create]\n[post-switch]';
+    const output = '[post-start]\n[post-switch]';
     const result = parseHookShowOutput(output);
 
-    expect(result.hooks['post-create']).toEqual([]);
+    expect(result.hooks['post-start']).toEqual([]);
     expect(result.hooks['post-switch']).toEqual([]);
   });
 
   it('should handle multiple hooks in same section', () => {
-    const output = '[post-create]\ninstall = "npm install"\nbuild = "npm run build"';
+    const output = '[post-start]\ninstall = "npm install"\nbuild = "npm run build"';
     const result = parseHookShowOutput(output);
 
-    expect(result.hooks['post-create']).toHaveLength(2);
-    expect(result.hooks['post-create'][0]).toEqual({
+    expect(result.hooks['post-start']).toHaveLength(2);
+    expect(result.hooks['post-start'][0]).toEqual({
       name: 'install',
       command: 'npm install',
       source: 'project',
     });
-    expect(result.hooks['post-create'][1]).toEqual({
+    expect(result.hooks['post-start'][1]).toEqual({
       name: 'build',
       command: 'npm run build',
       source: 'project',
@@ -193,11 +193,11 @@ describe('parseHookShowOutput', () => {
   });
 
   it('should handle hook commands with special characters', () => {
-    const output = '[post-create]\ntest = "echo \\"hello world\\""';
+    const output = '[post-start]\ntest = "echo \\"hello world\\""';
     const result = parseHookShowOutput(output);
 
     // The parser captures the literal content between quotes, including escaped quotes
-    expect(result.hooks['post-create'][0].command).toBe('echo \\"hello world\\"');
+    expect(result.hooks['post-start'][0].command).toBe('echo \\"hello world\\"');
   });
 });
 

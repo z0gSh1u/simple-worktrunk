@@ -2,7 +2,7 @@
 
 English | [简体中文](./README.zh-CN.md)
 
-Git Worktree is the consensus solution for avoiding code repository modification conflicts during parallel Coding Agent execution. simple-worktrunk provides a lightweight Node.js wrapper for the [worktrunk](https://github.com/max-sixty/worktrunk) CLI, offering a clean, promise-based API for managing Git Worktrees.
+`simple-worktrunk` is a TypeScript SDK wrapper for the [worktrunk](https://github.com/max-sixty/worktrunk) CLI. It exposes a promise-based API for managing Git worktrees, hooks, state variables, and selected low-level worktrunk steps.
 
 ## Installation
 
@@ -11,369 +11,159 @@ npm install simple-worktrunk # npm
 pnpm add simple-worktrunk    # pnpm
 ```
 
-**Requires the worktrunk CLI (`wt`) to be installed.** See the [official worktrunk installation guide](https://github.com/max-sixty/worktrunk#installation) for details.
+## Requirements
+
+- Node.js >= 18
+- worktrunk CLI >= 0.53.0
 
 ```bash
-cargo install worktrunk
+brew install worktrunk
+wt --version
 ```
 
 ## Quick Start
 
 ```typescript
 import { worktrunk } from 'simple-worktrunk'
+
 const wt = worktrunk()
 
-// Create a new worktree
-await wt.create('feature-auth')
+await wt.create({ branch: 'feature-auth' })
 
-// List all worktrees
-const { worktrees, current } = await wt.list()
+const { worktrees, current } = await wt.list({ full: true })
+console.log(current)
 
-console.log(current) // 'feature-auth'
-// Switch to another worktree
-await wt.switch('main')
+await wt.switch({ branch: 'main' })
 
-// When done, merge and cleanup
-await wt.merge()
+await wt.hook.run({ type: 'post-start', names: ['dev'], dryRun: true })
 
-// Remove a worktree
-await wt.remove('old-branch')
+await wt.step.eval('{{ branch | hash_port }}')
+
+await wt.merge({ target: 'main', remove: true })
+
+await wt.remove({ branches: ['old-branch'] })
 ```
 
 ## API
 
 ### `worktrunk(options?)`
 
-Creates a new worktrunk instance for interacting with the worktrunk CLI.
+Creates a worktrunk instance.
 
 ```typescript
-const wt = worktrunk()
-```
-
-**Parameters:**
-
-- `options` (`string | WorktrunkOptions`, optional) - Either a path to the `wt` binary, or an options object
-
-**Options object:**
-
-| Property  | Type     | Default     | Description                  |
-| --------- | -------- | ----------- | ---------------------------- |
-| `binary`  | `string` | `'wt'`      | Path to the worktrunk binary |
-| `baseDir` | `string` | `undefined` | Base directory for commands  |
-
-**Examples:**
-
-```typescript
-// Use default 'wt' from PATH
-const wt = worktrunk()
-
-// Custom binary path
-const wt = worktrunk('/usr/local/bin/wt')
-
-// Full options
 const wt = worktrunk({
-  binary: '/home/user/.cargo/bin/wt',
+  binary: 'wt',
   baseDir: '/path/to/repo',
+  configPath: '/path/to/config.toml',
 })
 ```
 
-### `wt.switch(options)`
+### `wt.switch(options)` / `wt.create(options)`
 
-Switch to an existing worktree or create a new one.
-
-```typescript
-const result = await wt.switch('my-feature')
-```
-
-**Parameters:**
-
-- `options` (`string | SwitchOptions`) - Either a branch name, or options object
-
-**Options object:**
-
-| Property | Type      | Default     | Description                         |
-| -------- | --------- | ----------- | ----------------------------------- |
-| `name`   | `string`  | `undefined` | Worktree/branch name                |
-| `create` | `boolean` | `false`     | Create worktree if it doesn't exist |
-| `base`   | `string`  | `undefined` | Base branch for new worktree        |
-| `exec`   | `string`  | `undefined` | Command to execute after switching  |
-| `noCd`   | `boolean` | `false`     | Don't change directory              |
-
-**Returns:** `Promise<SwitchResult>`
+Switch to a worktree, or create one with `create: true`. `wt.create()` is a convenience wrapper over `switch({ create: true })`.
 
 ```typescript
-interface SwitchResult {
-  worktree: string // Name of the worktree
-  path: string // Path to the worktree
-  branch: string // Branch name
-  created: boolean // Whether a new worktree was created
-}
-```
-
-**Examples:**
-
-```typescript
-// Switch to existing worktree
 await wt.switch('main')
-// Create and switch in one command
-const result = await wt.switch({ name: 'feature', create: true })
-// Create from specific base
-await wt.switch({ name: 'hotfix', create: true, base: 'production' })
-// Switch and execute command
-await wt.switch({ name: 'dev', exec: 'pnpm install' })
+await wt.switch({ branch: 'feature', create: true, base: 'main' })
+await wt.switch({ branch: 'dev', execute: 'pnpm install' })
+await wt.create({ branch: 'hotfix', base: 'v1.0.0' })
 ```
 
-### `wt.create(options)`
+### `wt.list(options?)`
 
-Create a new worktree (alias for `switch({ create: true })`).
-
-```typescript
-const result = await wt.create('feature-auth')
-```
-
-**Parameters:**
-
-- `options` (`string | CreateOptions`) - Either a branch name, or options object
-
-**Options object:**
-
-| Property | Type      | Default     | Description                       |
-| -------- | --------- | ----------- | --------------------------------- |
-| `name`   | `string`  | (required)  | Worktree/branch name              |
-| `base`   | `string`  | `undefined` | Base branch for new worktree      |
-| `exec`   | `string`  | `undefined` | Command to execute after creating |
-| `noCd`   | `boolean` | `false`     | Don't change directory            |
-
-**Returns:** `Promise<SwitchResult>`
-
-**Examples:**
+Lists worktrees using worktrunk JSON output.
 
 ```typescript
-// Simple creation
-await wt.create('feature-auth')
-// Create from specific base
-await wt.create({ name: 'hotfix', base: 'v1.0.0' })
-// Create and run command
-await wt.create({ name: 'dev', exec: 'pnpm install' })
-```
+const { worktrees, current } = await wt.list({ full: true })
 
-### `wt.remove(options)`
-
-Remove a worktree.
-
-```typescript
-const result = await wt.remove('old-branch')
-```
-
-**Parameters:**
-
-- `options` (`string | RemoveOptions`, optional) - Either a branch name, or options object. If omitted, removes current worktree.
-
-**Options object:**
-
-| Property     | Type      | Default     | Description                             |
-| ------------ | --------- | ----------- | --------------------------------------- |
-| `name`       | `string`  | `undefined` | Worktree name to remove                 |
-| `keepBranch` | `boolean` | `false`     | Keep the branch after removing worktree |
-
-**Returns:** `Promise<RemoveResult>`
-
-```typescript
-interface RemoveResult {
-  removed: string // Name of removed worktree
-  branchDeleted: boolean // Whether the branch was deleted
+for (const worktree of worktrees) {
+  console.log(`${worktree.branch} ${worktree.path}`)
 }
 ```
 
-**Examples:**
+### `wt.remove(options?)`
+
+Removes worktrees.
 
 ```typescript
-// Remove specific worktree and its branch
 await wt.remove('feature-old')
-
-// Remove worktree but keep the branch
-await wt.remove({ name: 'feature-old', keepBranch: true })
-
-// Remove current worktree
+await wt.remove({ branches: ['feature-old'], keepBranch: true })
 await wt.remove()
 ```
 
-### `wt.list()`
+### `wt.merge(options?)`
 
-List all worktrees.
-
-```typescript
-const { worktrees, current } = await wt.list()
-```
-
-**Returns:** `Promise<ListResult>`
+Merges the current branch into a target branch.
 
 ```typescript
-interface ListResult {
-  worktrees: WorktreeInfo[] // Array of all worktrees
-  current: string // Name of current worktree
-}
-
-interface WorktreeInfo {
-  name: string // Worktree name
-  path: string // Absolute path to worktree
-  branch: string // Branch name
-  isMain: boolean // Whether this is the main worktree
-}
-```
-
-**Examples:**
-
-```typescript
-const { worktrees, current } = await wt.list()
-// Get current worktree
-console.log(`Current worktree: ${current}`)
-// List all worktrees
-for (const wt of worktrees) {
-  console.log(`${wt.name} (${wt.branch}) - ${wt.path}`)
-}
-// Exclude [Main] worktree
-const features = worktrees.filter((w) => !w.isMain)
-```
-
-### `wt.merge(options)`
-
-Merge current branch to target and optionally remove worktree.
-
-```typescript
-const result = await wt.merge()
-```
-
-**Parameters:**
-
-- `options` (`MergeOptions`, optional)
-
-**Options object:**
-
-| Property       | Type      | Default  | Description                     |
-| -------------- | --------- | -------- | ------------------------------- |
-| `target`       | `string`  | `'main'` | Target branch to merge into     |
-| `keepWorktree` | `boolean` | `false`  | Keep the worktree after merging |
-
-**Returns:** `Promise<MergeResult>`
-
-```typescript
-interface MergeResult {
-  merged: string // Branch that was merged
-  target: string // Target branch
-  worktreeRemoved: boolean // Whether worktree was removed
-}
-```
-
-**Examples:**
-
-```typescript
-// Merge to main (default) and remove worktree
 await wt.merge()
-
-// Merge to custom target
 await wt.merge({ target: 'develop' })
-
-// Merge but keep worktree
-await wt.merge({ keepWorktree: true })
+await wt.merge({ remove: false })
 ```
 
-### `wt.hook(options)`
+### `wt.hook`
 
-Manually run a hook.
+Runs and inspects worktrunk hooks.
 
 ```typescript
-const result = await wt.hook({ type: 'post-create' })
+await wt.hook.run({ type: 'post-start', names: ['dev'], dryRun: true })
+await wt.hook.run({ type: 'pre-merge', vars: { env: 'staging' }, yes: true })
+
+const { hooks } = await wt.hook.show()
 ```
 
-**Parameters:**
+### `wt.step`
 
-- `options` (`HookOptions`)
-
-**Options object:**
-
-| Property      | Type                     | Default     | Description                |
-| ------------- | ------------------------ | ----------- | -------------------------- |
-| `type`        | `HookType`               | (required)  | Hook type to run           |
-| `name`        | `string`                 | `undefined` | Named hook to run          |
-| `userOnly`    | `boolean`                | `false`     | Run only user hooks        |
-| `projectOnly` | `boolean`                | `false`     | Run only project hooks     |
-| `yes`         | `boolean`                | `false`     | Skip confirmation          |
-| `vars`        | `Record<string, string>` | `{}`        | Variables to pass to hooks |
-
-**Hook types:** `'post-create' | 'post-switch' | 'pre-merge' | 'post-merge' | 'pre-remove' | 'post-remove'`
-
-**Returns:** `Promise<HookResult>`
+Wraps selected `wt step` commands.
 
 ```typescript
-interface HookResult {
-  hook: string // Hook type that was run
-  executed: HookExecution[] // Execution results
-}
+await wt.step.commit({ stage: 'tracked', dryRun: true })
+await wt.step.squash({ target: 'main', noHooks: true })
+await wt.step.prune({ dryRun: true, minAge: '7d' })
 
-interface HookExecution {
-  name: string // Hook name
-  source: 'user' | 'project' // Hook source
-  success: boolean // Whether hook succeeded
-  output?: string // Hook output
-}
+const port = await wt.step.eval('{{ branch | hash_port }}')
 ```
 
-**Examples:**
+### `wt.config`
+
+Reads config and manages worktrunk state variables.
 
 ```typescript
-// Run post-create hook
-await wt.hook({ type: 'post-create' })
+const config = await wt.config.show({ format: 'json' })
 
-// Run specific named hook
-await wt.hook({ type: 'post-create', name: 'install-deps' })
+await wt.config.state.vars.set('env', 'staging')
+const env = await wt.config.state.vars.get('env')
+const keys = await wt.config.state.vars.list()
+await wt.config.state.vars.clear('env')
 
-// Run with variables
-await wt.hook({
-  type: 'post-create',
-  vars: { PROJECT_NAME: 'my-project' },
-})
-
-// Run only user hooks
-await wt.hook({ type: 'pre-merge', userOnly: true })
+const logs = await wt.config.state.logs()
 ```
 
-### `wt.hookShow()`
+### `wt.raw(args, options?)`
 
-Show configured hooks.
+Runs a worktrunk command that is not wrapped yet.
 
 ```typescript
-const result = await wt.hookShow()
+const result = await wt.raw(['config', 'show', '--format=json'])
 ```
 
-**Returns:** `Promise<HookShowResult>`
+## Migrating from 0.1 to 0.2
 
-```typescript
-interface HookShowResult {
-  hooks: Record<string, NamedHook[]> // Hooks by type
-}
+`simple-worktrunk` 0.2 targets worktrunk 0.53+ and intentionally breaks the 0.1 API.
 
-interface NamedHook {
-  name?: string // Hook name (optional)
-  command: string // Command to run
-  source: 'user' | 'project' // Hook source
-}
-```
+| 0.1 API | 0.2 API |
+| --- | --- |
+| `name` | `branch` |
+| `exec` | `execute` |
+| `hookShow()` | `hook.show()` |
+| `hook({ type: 'post-create' })` | `hook.run({ type: 'post-start' })` |
+| inferred text results | JSON-based results |
 
-**Examples:**
-
-```typescript
-const { hooks } = await wt.hookShow()
-
-// List all post-create hooks
-for (const hook of hooks['post-create'] || []) {
-  console.log(`${hook.name || '(unnamed)'}: ${hook.command} (${hook.source})`)
-}
-```
+Use `wt.raw(args)` for worktrunk CLI features that are not wrapped yet.
 
 ## Error Handling
 
-The library exports custom error types for better error handling:
+The library exports custom error types:
 
 ```typescript
 import {
@@ -381,40 +171,31 @@ import {
   WorktrunkError,
   BinaryNotFoundError,
   CommandFailedError,
+  JsonParseError,
 } from 'simple-worktrunk'
 
 try {
-  await wt.create('my-feature')
+  await wt.create({ branch: 'my-feature' })
 } catch (error) {
   if (error instanceof BinaryNotFoundError) {
-    console.error('worktrunk CLI not found!')
+    console.error('worktrunk CLI not found')
   } else if (error instanceof CommandFailedError) {
     console.error(`Command failed: ${error.command}`)
-    console.error(`Exit code: ${error.code}`)
-    console.error(`Error: ${error.message}`)
+  } else if (error instanceof JsonParseError) {
+    console.error(`Could not parse JSON from: ${error.command}`)
   } else if (error instanceof WorktrunkError) {
-    console.error(`Worktrunk error: ${error.message}`)
+    console.error(error.message)
   }
 }
 ```
 
 ## Testing
 
-The project uses a hybrid testing strategy:
+- `pnpm test:run` runs unit and integration tests once.
+- `pnpm lint` runs TypeScript checks.
+- `pnpm build` builds ESM and declarations.
 
-- **Unit tests** (`pnpm test:unit`) - Fast tests for pure functions (parsers, errors)
-- **Integration tests** (`pnpm test:integration`) - Real `wt` CLI tests against test git repository
-
-## Playground
-
-The `playground/` directory contains an interactive demo showcasing the complete lifecycle of managing Git Worktrees using the simple-worktrunk library.
-
-```bash
-pnpm build
-node playground/demo.js
-```
-
-The demo interactively walks through creating, switching, and removing worktrees.
+Integration tests require `wt >= 0.53.0`.
 
 ## License
 
