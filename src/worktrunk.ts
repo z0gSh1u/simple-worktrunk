@@ -28,6 +28,7 @@ import { switchCommand, createCommand } from './commands/switch.js';
 import { listCommand } from './commands/list.js';
 import { removeCommand } from './commands/remove.js';
 import { mergeCommand } from './commands/merge.js';
+import { hookRunCommand, hookShowCommand } from './commands/hook.js';
 
 export interface HookNamespace {
   run(options: HookRunOptions): Promise<HookResult>;
@@ -108,8 +109,8 @@ export function createWorktrunkInstance(options: WorktrunkOptions | string = {})
     list: (opts) => listCommand.call(baseInstance, opts ?? {}),
     merge: (opts) => mergeCommand.call(baseInstance, opts ?? {}),
     hook: {
-      run: notImplemented,
-      show: notImplemented,
+      run: (opts) => hookRunCommand.call(baseInstance, opts),
+      show: () => hookShowCommand.call(baseInstance),
     },
     step: {
       commit: notImplemented,

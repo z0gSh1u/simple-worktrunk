@@ -1,8 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { TestRepo } from '../fixtures/test-repo.js';
 import { worktrunk } from '../../src/index.js';
-import { rmSync } from 'node:fs';
-import { existsSync } from 'node:fs';
+import { rmSync, existsSync } from 'node:fs';
 
 describe('hook (integration)', () => {
   let repo: TestRepo;
@@ -18,30 +17,32 @@ describe('hook (integration)', () => {
     }
   });
 
-  it('should show configured hooks', async () => {
+  it('shows configured hooks', async () => {
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    const result = await wt.hookShow();
+    const result = await wt.hook.show();
 
-    // Should return hooks object even if empty
     expect(result.hooks).toBeDefined();
     expect(typeof result.hooks).toBe('object');
   });
 
-  it('should throw error when running hook without configuration', async () => {
+  it('treats missing hook configuration as a no-op success', async () => {
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
+    const result = await wt.hook.run({ type: 'post-start', yes: true });
 
-    // When no hooks are configured, wt hook returns exit code 1
-    await expect(
-      wt.hook({ type: 'post-create', yes: true })
-    ).rejects.toThrow();
+    expect(result.hook).toBe('post-start');
+    expect(result.stdout).toBeDefined();
+    expect(result.stderr).toBeDefined();
   });
 
-  it('should throw error when running named hook without configuration', async () => {
+  it('supports dry-run for named hook filters', async () => {
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
+    const result = await wt.hook.run({
+      type: 'post-start',
+      names: ['test'],
+      dryRun: true,
+      yes: true,
+    });
 
-    // Test with yes flag for non-interactive
-    await expect(
-      wt.hook({ type: 'post-create', name: 'test', yes: true })
-    ).rejects.toThrow();
+    expect(result.hook).toBe('post-start');
   });
 });
