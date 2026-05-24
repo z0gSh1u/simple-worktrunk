@@ -6,6 +6,7 @@ import { existsSync } from 'node:fs';
 
 describe('switch (integration)', () => {
   let repo: TestRepo;
+  const switchActions = ['created', 'existing', 'switched', 'already_at'];
 
   beforeEach(async () => {
     repo = await TestRepo.create();
@@ -27,7 +28,9 @@ describe('switch (integration)', () => {
     const result = await wt.switch('feature-a');
 
     // Verify: Check actual git state
-    expect(result.worktree).toBe('feature-a');
+    expect(result.branch).toBe('feature-a');
+    expect(result.path).toContain('feature-a');
+    expect(switchActions).toContain(result.action);
 
     // Note: We can't check the current branch of the main worktree
     // because switch actually switches us to a different worktree directory
@@ -39,10 +42,11 @@ describe('switch (integration)', () => {
 
   it('should create new worktree with --create flag', async () => {
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    const result = await wt.switch({ name: 'feature-b', create: true });
+    const result = await wt.switch({ branch: 'feature-b', create: true });
 
-    expect(result.created).toBe(true);
-    expect(result.worktree).toBe('feature-b');
+    expect(result.branch).toBe('feature-b');
+    expect(result.path).toContain('feature-b');
+    expect(switchActions).toContain(result.action);
 
     // Verify the worktree actually exists in git
     const worktrees = await repo.getGitWorktrees();
@@ -55,7 +59,7 @@ describe('switch (integration)', () => {
     await repo.createWorktree('develop');
 
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    await wt.switch({ name: 'feature-from-develop', create: true, base: 'develop' });
+    await wt.switch({ branch: 'feature-from-develop', create: true, base: 'develop' });
 
     // Verify the worktree was created
     const worktrees = await repo.getGitWorktrees();
@@ -75,8 +79,9 @@ describe('switch (integration)', () => {
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
     const result = await wt.create('feature-create-alias');
 
-    expect(result.created).toBe(true);
-    expect(result.worktree).toBe('feature-create-alias');
+    expect(result.branch).toBe('feature-create-alias');
+    expect(result.path).toContain('feature-create-alias');
+    expect(switchActions).toContain(result.action);
 
     // Verify the worktree actually exists in git
     const worktrees = await repo.getGitWorktrees();
@@ -86,13 +91,11 @@ describe('switch (integration)', () => {
 
   it('should return path in result', async () => {
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    const result = await wt.switch({ name: 'feature-with-path', create: true });
+    const result = await wt.switch({ branch: 'feature-with-path', create: true });
 
-    // Note: The current implementation only captures stdout, but wt outputs
-    // the path to stderr. So the path will be empty. This is a known limitation.
-    // The important thing is that the worktree was created successfully.
-    expect(result.worktree).toBe('feature-with-path');
-    expect(result.created).toBe(true);
+    expect(result.branch).toBe('feature-with-path');
+    expect(result.path).toContain('feature-with-path');
+    expect(switchActions).toContain(result.action);
 
     // Verify the worktree actually exists
     const worktrees = await repo.getGitWorktrees();

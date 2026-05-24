@@ -25,10 +25,12 @@ describe('parseListOutput', () => {
     expect(result.worktrees).toHaveLength(2);
     expect(result.current).toBe('main');
     expect(result.worktrees[0]).toEqual({
-      name: 'main',
       path: '/repo/main',
       branch: 'main',
+      kind: 'worktree',
       isMain: true,
+      isCurrent: true,
+      isPrevious: false,
     });
   });
 
@@ -51,7 +53,6 @@ describe('parseListOutput', () => {
     ]);
     const result = parseListOutput(output);
 
-    expect(result.worktrees[0].name).toBe('feature/abc-123');
     expect(result.worktrees[0].branch).toBe('feature/abc-123');
   });
 
@@ -90,7 +91,7 @@ describe('parseListOutput', () => {
     const result = parseListOutput(output);
 
     expect(result.worktrees).toHaveLength(1);
-    expect(result.worktrees[0].name).toBe('main');
+    expect(result.worktrees[0].branch).toBe('main');
   });
 
   it('should identify main worktree', () => {
@@ -136,7 +137,7 @@ describe('parseListOutput', () => {
     const result = parseListOutput(output);
 
     expect(result.worktrees).toHaveLength(1);
-    expect(result.worktrees[0].name).toBe('main');
+    expect(result.worktrees[0].branch).toBe('main');
   });
 });
 
@@ -201,37 +202,14 @@ describe('parseHookShowOutput', () => {
 });
 
 describe('parseSwitchOutput', () => {
-  it('should extract path from output', () => {
-    const output = 'Created worktree at /path/to/feature';
+  it('parses JSON switch output with trailing human text', () => {
+    const output = '{"action":"already_at","branch":"main","path":"/repo/main"}\n○ Already on main';
     const result = parseSwitchOutput(output);
 
-    expect(result.path).toBe('/path/to/feature');
-  });
-
-  it('should return empty path if no path found', () => {
-    const result = parseSwitchOutput('No path here');
-
-    expect(result.path).toBe('');
-  });
-
-  it('should extract path from different output formats', () => {
-    const output = 'Switched to /path/to/worktree';
-    const result = parseSwitchOutput(output);
-
-    expect(result.path).toBe('/path/to/worktree');
-  });
-
-  it('should handle empty output', () => {
-    const result = parseSwitchOutput('');
-
-    expect(result.path).toBe('');
-  });
-
-  it('should extract path with spaces', () => {
-    const output = 'Created worktree at /path/to/my feature';
-    const result = parseSwitchOutput(output);
-
-    // The regex stops at the first space, so we get the first part
-    expect(result.path).toBe('/path/to/my');
+    expect(result).toEqual({
+      action: 'already_at',
+      branch: 'main',
+      path: '/repo/main',
+    });
   });
 });

@@ -38,7 +38,7 @@ export interface CreateOptions extends Omit<SwitchOptions, 'create'> {
   branch: string;
 }
 
-export type SwitchAction = 'created' | 'switched' | 'already_at' | string;
+export type SwitchAction = 'created' | 'existing' | 'switched' | 'already_at' | string;
 
 export interface SwitchResult {
   action: SwitchAction;

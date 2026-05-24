@@ -23,9 +23,11 @@ describe('list (integration)', () => {
     await repo.createWorktree('feature-b');
 
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    const result = await wt.list();
+    const result = await wt.list({ full: true });
 
     expect(result.worktrees.length).toBeGreaterThanOrEqual(3); // master + 2 features
+    expect(result.worktrees[0]).toHaveProperty('isCurrent');
+    expect(result.worktrees[0]).toHaveProperty('kind');
     const branches = result.worktrees.map(w => w.branch);
     expect(branches).toContain('master');
     expect(branches).toContain('feature-a');
@@ -34,7 +36,7 @@ describe('list (integration)', () => {
 
   it('should identify current worktree', async () => {
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    await wt.switch({ name: 'current-feature', create: true });
+    await wt.switch({ branch: 'current-feature', create: true });
     const result = await wt.list();
 
     // The worktree should exist in the list

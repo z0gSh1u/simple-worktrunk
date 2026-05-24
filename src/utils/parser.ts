@@ -3,51 +3,33 @@ import type {
   WorktreeInfo,
   HookShowResult,
   NamedHook,
+  SwitchResult,
 } from '../types.js';
+import { extractFirstJsonValue } from './json.js';
+import { mapListItem, mapSwitchResult } from './mapper.js';
 
 /**
  * Parse `wt list` output into structured data
  * Input format from CLI: JSON array of worktree objects
  */
 export function parseListOutput(stdout: string): ListResult {
-  // Parse JSON output from wt list --format json
-  // The output may contain warnings in stderr, so we need to find the JSON part
-  // JSON starts with '[' and ends with ']'
-  const jsonStart = stdout.indexOf('[');
-  const jsonEnd = stdout.lastIndexOf(']');
-
-  if (jsonStart === -1 || jsonEnd === -1) {
-    return { worktrees: [], current: '' };
-  }
-
-  const jsonString = stdout.substring(jsonStart, jsonEnd + 1);
+  const json = extractFirstJsonValue(stdout);
+  if (!json) return { worktrees: [], current: '' };
 
   try {
-    const data = JSON.parse(jsonString);
+    const data = JSON.parse(json);
     const worktrees: WorktreeInfo[] = [];
     let current = '';
 
     for (const item of data) {
-      // Only process worktrees, not bare repos or other kinds
       if (item.kind !== 'worktree') continue;
-
-      worktrees.push({
-        path: item.path,
-        branch: item.branch,
-        kind: item.kind,
-        isMain: item.is_main || false,
-        isCurrent: item.is_current || false,
-        isPrevious: item.is_previous || false,
-      });
-
-      if (item.is_current) {
-        current = item.branch;
-      }
+      const worktree = mapListItem(item);
+      worktrees.push(worktree);
+      if (worktree.isCurrent) current = worktree.branch;
     }
 
     return { worktrees, current };
-  } catch (error) {
-    // Fallback to empty result if JSON parsing fails
+  } catch {
     return { worktrees: [], current: '' };
   }
 }
@@ -86,26 +68,13 @@ export function parseHookShowOutput(stdout: string): HookShowResult {
   return { hooks };
 }
 
-/**
- * Parse switch/create output to extract path
- * wt outputs worktree path to stderr in format: "worktree @ /path/to/worktree"
- */
-export function parseSwitchOutput(output: string): { path: string } {
-  if (!output) {
-    return { path: '' };
-  }
+export function parseSwitchOutput(output: string): SwitchResult {
+  const json = extractFirstJsonValue(output);
+  if (!json) return { action: '', branch: '', path: '' };
 
-  // Match path after @ symbol
-  const pathMatch = output.match(/@\s+([^\s\n]+)/);
-  if (pathMatch) {
-    return { path: pathMatch[1] };
+  try {
+    return mapSwitchResult(JSON.parse(json));
+  } catch {
+    return { action: '', branch: '', path: '' };
   }
-
-  // Fallback: look for any path-like pattern
-  const fallbackMatch = output.match(/[~]?[\/]?[^\s\n]+\/[^\s\n]+/);
-  if (fallbackMatch) {
-    return { path: fallbackMatch[0] };
-  }
-
-  return { path: '' };
 }
