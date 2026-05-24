@@ -29,6 +29,17 @@ import { listCommand } from './commands/list.js';
 import { removeCommand } from './commands/remove.js';
 import { mergeCommand } from './commands/merge.js';
 import { hookRunCommand, hookShowCommand } from './commands/hook.js';
+import {
+  stepCommitCommand,
+  stepDiffCommand,
+  stepEvalCommand,
+  stepForEachCommand,
+  stepPruneCommand,
+  stepPushCommand,
+  stepRebaseCommand,
+  stepSquashCommand,
+  stepTetherCommand,
+} from './commands/step.js';
 
 export interface HookNamespace {
   run(options: HookRunOptions): Promise<HookResult>;
@@ -113,15 +124,15 @@ export function createWorktrunkInstance(options: WorktrunkOptions | string = {})
       show: () => hookShowCommand.call(baseInstance),
     },
     step: {
-      commit: notImplemented,
-      squash: notImplemented,
-      rebase: notImplemented,
-      push: notImplemented,
-      diff: notImplemented,
-      prune: notImplemented,
-      tether: notImplemented,
-      forEach: notImplemented,
-      eval: notImplemented,
+      commit: (opts) => stepCommitCommand.call(baseInstance, opts ?? {}),
+      squash: (opts) => stepSquashCommand.call(baseInstance, opts ?? {}),
+      rebase: (opts) => stepRebaseCommand.call(baseInstance, opts ?? {}),
+      push: (opts) => stepPushCommand.call(baseInstance, opts ?? {}),
+      diff: (opts) => stepDiffCommand.call(baseInstance, opts ?? {}),
+      prune: (opts) => stepPruneCommand.call(baseInstance, opts ?? {}),
+      tether: (opts) => stepTetherCommand.call(baseInstance, opts),
+      forEach: (opts) => stepForEachCommand.call(baseInstance, opts),
+      eval: (expr) => stepEvalCommand.call(baseInstance, expr),
       raw: (args, opts) => rawCommand.call(baseInstance, ['step', ...args], opts),
     },
     config: {
