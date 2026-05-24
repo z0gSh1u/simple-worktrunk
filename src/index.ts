@@ -15,8 +15,14 @@ export type {
   HookShowResult,
   NamedHook,
   WorktrunkOptions,
+  CommandOptions,
 } from './types.js';
-export { WorktrunkError, BinaryNotFoundError, CommandFailedError } from './errors.js';
+export {
+  WorktrunkError,
+  BinaryNotFoundError,
+  CommandFailedError,
+  JsonParseError,
+} from './errors.js';
 
 // Main factory function
 import { createWorktrunkInstance } from './worktrunk.js';

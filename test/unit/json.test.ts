@@ -14,6 +14,10 @@ describe('extractFirstJsonValue', () => {
     ).toBe('[{"branch":"main"},{"branch":"feature"}]');
   });
 
+  it('skips balanced non-JSON bracket spans', () => {
+    expect(extractFirstJsonValue('warning [deprecated]\n{"ok":true}')).toBe('{"ok":true}');
+  });
+
   it('handles strings containing braces', () => {
     expect(
       extractFirstJsonValue('{"message":"hello {branch}","ok":true}\ntrailing')

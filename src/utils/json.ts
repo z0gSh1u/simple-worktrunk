@@ -1,6 +1,6 @@
-export function findJsonStart(output: string): number {
-  const objectIndex = output.indexOf('{');
-  const arrayIndex = output.indexOf('[');
+export function findJsonStart(output: string, fromIndex = 0): number {
+  const objectIndex = output.indexOf('{', fromIndex);
+  const arrayIndex = output.indexOf('[', fromIndex);
 
   if (objectIndex === -1) {
     return arrayIndex;
@@ -14,12 +14,27 @@ export function findJsonStart(output: string): number {
 }
 
 export function extractFirstJsonValue(output: string): string | null {
-  const start = findJsonStart(output);
+  let start = findJsonStart(output);
 
-  if (start === -1) {
-    return null;
+  while (start !== -1) {
+    const candidate = extractBalancedCandidate(output, start);
+
+    if (candidate) {
+      try {
+        JSON.parse(candidate);
+        return candidate;
+      } catch {
+        // Keep scanning; CLI warnings can contain balanced bracket spans.
+      }
+    }
+
+    start = findJsonStart(output, start + 1);
   }
 
+  return null;
+}
+
+function extractBalancedCandidate(output: string, start: number): string | null {
   const opening = output[start];
   const closing = opening === '{' ? '}' : ']';
   const stack = [closing];

@@ -1,10 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import { worktrunk } from '../src/index.js';
+import { JsonParseError, worktrunk } from '../src/index.js';
+import type { CommandOptions } from '../src/index.js';
 
 describe('index', () => {
   it('should export worktrunk function', () => {
     expect(worktrunk).toBeDefined();
     expect(typeof worktrunk).toBe('function');
+  });
+
+  it('should export public error classes', () => {
+    expect(JsonParseError).toBeDefined();
+    expect(typeof JsonParseError).toBe('function');
+  });
+
+  it('should export command option types', () => {
+    const options: CommandOptions = {
+      cwd: '/tmp',
+    };
+
+    expect(options.cwd).toBe('/tmp');
   });
 
   it('should create instance', () => {
