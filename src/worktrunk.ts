@@ -26,6 +26,8 @@ import { rawCommand } from './commands/raw.js';
 import type { ExecResult } from './utils/executor.js';
 import { switchCommand, createCommand } from './commands/switch.js';
 import { listCommand } from './commands/list.js';
+import { removeCommand } from './commands/remove.js';
+import { mergeCommand } from './commands/merge.js';
 
 export interface HookNamespace {
   run(options: HookRunOptions): Promise<HookResult>;
@@ -102,9 +104,9 @@ export function createWorktrunkInstance(options: WorktrunkOptions | string = {})
     options: normalized,
     switch: (opts) => switchCommand.call(baseInstance, opts ?? {}),
     create: (opts) => createCommand.call(baseInstance, opts),
-    remove: notImplemented,
+    remove: (opts) => removeCommand.call(baseInstance, opts ?? {}),
     list: (opts) => listCommand.call(baseInstance, opts ?? {}),
-    merge: notImplemented,
+    merge: (opts) => mergeCommand.call(baseInstance, opts ?? {}),
     hook: {
       run: notImplemented,
       show: notImplemented,

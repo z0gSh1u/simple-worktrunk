@@ -1,28 +1,35 @@
 import type { WorktrunkInstance } from '../worktrunk.js';
 import type { MergeOptions, MergeResult } from '../types.js';
-import { execCommandWithStderr } from '../utils/executor.js';
+import { executeJson } from '../utils/executor.js';
 
 export async function mergeCommand(
   this: WorktrunkInstance,
-  options?: MergeOptions
+  options: MergeOptions = {}
 ): Promise<MergeResult> {
-  const opts = options || {};
-  const { options: config } = this;
+  const result = await executeJson<Record<string, unknown>>(buildMergeArgs(options), this.options);
+  return mapMergeResult(result);
+}
 
-  const args = ['merge', '-y'];
+export function buildMergeArgs(options: MergeOptions = {}): string[] {
+  const args = ['merge', '--format=json'];
+  if (options.squash === false) args.push('--no-squash');
+  if (options.commit === false) args.push('--no-commit');
+  if (options.rebase === false) args.push('--no-rebase');
+  if (options.remove === false) args.push('--no-remove');
+  if (options.ff === false) args.push('--no-ff');
+  if (options.stage) args.push('--stage', options.stage);
+  if (options.noHooks) args.push('--no-hooks');
+  if (options.yes) args.push('--yes');
+  if (options.target) args.push(options.target);
+  return args;
+}
 
-  if (opts.remove === false) {
-    args.push('--no-remove');
-  }
-
-  if (opts.target) {
-    args.push(opts.target);
-  }
-
-  const result = await execCommandWithStderr(args, config);
-
+export function mapMergeResult(raw: Record<string, unknown>): MergeResult {
   return {
-    target: opts.target || 'main',
-    raw: { stdout: result.stdout, stderr: result.stderr },
+    target: raw.target as string | undefined,
+    source: raw.source as string | undefined,
+    branch: raw.branch as string | undefined,
+    path: raw.path as string | undefined,
+    raw,
   };
 }

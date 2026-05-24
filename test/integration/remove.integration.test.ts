@@ -22,9 +22,10 @@ describe('remove (integration)', () => {
     await repo.createWorktree('to-remove');
 
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    const result = await wt.remove({ name: 'to-remove' });
+    const result = await wt.remove({ branches: ['to-remove'] });
 
-    expect(result.removed).toBe('to-remove');
+    expect(result.raw).toBeDefined();
+    expect(result.removed.length).toBeGreaterThanOrEqual(1);
 
     // Verify worktree is gone
     const worktrees = await repo.getGitWorktrees();
@@ -36,7 +37,7 @@ describe('remove (integration)', () => {
     await repo.createWorktree('temp-branch');
 
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    await wt.remove({ name: 'temp-branch' });
+    await wt.remove({ branches: ['temp-branch'] });
 
     // Verify branch is deleted
     const branches = await repo.git.branch();
@@ -47,9 +48,10 @@ describe('remove (integration)', () => {
     await repo.createWorktree('keep-branch');
 
     const wt = worktrunk({ baseDir: repo.path, binary: 'wt' });
-    const result = await wt.remove({ name: 'keep-branch', keepBranch: true });
+    const result = await wt.remove({ branches: ['keep-branch'], keepBranch: true });
 
-    expect(result.branchDeleted).toBe(false);
+    expect(result.raw).toBeDefined();
+    expect(result.removed.length).toBeGreaterThanOrEqual(1);
 
     // Verify branch still exists
     const branches = await repo.git.branch();
