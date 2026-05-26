@@ -22,6 +22,11 @@ function expandPath(inputPath) {
 }
 
 function pause(message) {
+  if (process.env.SIMPLE_WORKTRUNK_DEMO_AUTO === '1') {
+    console.log(message);
+    return Promise.resolve();
+  }
+
   return new Promise((resolve) => {
     const rl = readline.createInterface({
       input: process.stdin,
@@ -54,8 +59,31 @@ function runCommand(cmd, description, cwd) {
   }
 }
 
+function describeWorktree(worktree) {
+  const label = worktree.kind === 'worktree' ? worktree.branch : `${worktree.branch} [${worktree.kind}]`;
+  console.log(`  - ${label}${worktree.isMain ? ' [MAIN]' : ''}`);
+  console.log(`    Path: ${worktree.path || '(no worktree path)'}`);
+}
+
+function describeSwitchResult(result) {
+  console.log(`   Branch: ${result.branch}`);
+  console.log(`   Path: ${expandPath(result.path)}`);
+  console.log(`   Action: ${result.action}`);
+}
+
+function describeRemoveResult(result) {
+  for (const removed of result.removed) {
+    console.log(`   Removed: ${removed.branch || '(unknown branch)'}`);
+    if (removed.path) {
+      console.log(`   Path: ${expandPath(removed.path)}`);
+    }
+  }
+}
+
 async function main() {
-  const repoDir = path.join(__dirname, 'repo');
+  const repoDir = process.env.SIMPLE_WORKTRUNK_DEMO_REPO
+    ? path.resolve(process.env.SIMPLE_WORKTRUNK_DEMO_REPO)
+    : path.join(__dirname, 'repo');
   
   console.log('📋 This demo will showcase the complete worktree lifecycle using simple-worktrunk.');
   console.log('   Make sure you have the worktrunk CLI (wt) installed!');
@@ -91,20 +119,14 @@ async function main() {
   const listResult = await wt.list();
   console.log(`Current worktree: ${listResult.current}`);
   console.log('All worktrees:');
-  listResult.worktrees.forEach(w => {
-    console.log(`  - ${w.name} (${w.branch})${w.isMain ? ' [MAIN]' : ''}`);
-    console.log(`    Path: ${w.path}`);
-  });
+  listResult.worktrees.forEach(describeWorktree);
 
   await pause('Step 4: Create a new worktree');
 
   console.log('\n🌱 Creating a new worktree named "feature-add-demo"...');
   const createResult = await wt.create('feature-add-demo');
   console.log(`✅ Worktree created!`);
-  console.log(`   Name: ${createResult.worktree}`);
-  console.log(`   Branch: ${createResult.branch}`);
-  console.log(`   Path: ${createResult.path}`);
-  console.log(`   Was new: ${createResult.created}`);
+  describeSwitchResult(createResult);
 
   await pause('Step 5: Make changes in the new worktree');
 
@@ -124,33 +146,28 @@ async function main() {
   const listResult2 = await wt.list();
   console.log(`Current worktree: ${listResult2.current}`);
   console.log('All worktrees:');
-  listResult2.worktrees.forEach(w => {
-    console.log(`  - ${w.name} (${w.branch})${w.isMain ? ' [MAIN]' : ''}`);
-    console.log(`    Path: ${w.path}`);
-  });
+  listResult2.worktrees.forEach(describeWorktree);
 
   await pause('Step 7: Switch to the main worktree');
 
   console.log('\n🔄 Switching back to main worktree...');
   const switchResult = await wt.switch('main');
-  console.log(`✅ Switched to: ${switchResult.worktree}`);
-  console.log(`   Path: ${expandPath(switchResult.path)}`);
+  console.log(`✅ Switched to: ${switchResult.branch}`);
+  describeSwitchResult(switchResult);
 
   await pause('Step 8: Switch back to feature worktree');
 
   console.log('\n🔄 Switching back to feature worktree...');
   const switchResult2 = await wt.switch('feature-add-demo');
-  console.log(`✅ Switched to: ${switchResult2.worktree}`);
-  console.log(`   Path: ${expandPath(switchResult2.path)}`);
+  console.log(`✅ Switched to: ${switchResult2.branch}`);
+  describeSwitchResult(switchResult2);
 
   await pause('Step 9: Create another worktree from feature branch');
 
   console.log('\n🌱 Creating another worktree "feature-hotfix" from the feature branch...');
-  const createResult2 = await wt.create({ name: 'feature-hotfix', base: 'feature-add-demo' });
+  const createResult2 = await wt.create({ branch: 'feature-hotfix', base: 'feature-add-demo' });
   console.log(`✅ Worktree created!`);
-  console.log(`   Name: ${createResult2.worktree}`);
-  console.log(`   Branch: ${createResult2.branch}`);
-  console.log(`   Path: ${expandPath(createResult2.path)}`);
+  describeSwitchResult(createResult2);
 
   await pause('Step 10: List all worktrees');
 
@@ -158,31 +175,29 @@ async function main() {
   const listResult3 = await wt.list();
   console.log(`Current worktree: ${listResult3.current}`);
   console.log('All worktrees:');
-  listResult3.worktrees.forEach(w => {
-    console.log(`  - ${w.name} (${w.branch})${w.isMain ? ' [MAIN]' : ''}`);
-    console.log(`    Path: ${w.path}`);
-  });
+  listResult3.worktrees.forEach(describeWorktree);
 
   await pause('Step 11: Remove the hotfix worktree');
 
   console.log('\n🗑️  Removing the hotfix worktree...');
   const removeResult = await wt.remove('feature-hotfix');
-  console.log(`✅ Worktree removed: ${removeResult.removed}`);
-  console.log(`   Branch deleted: ${removeResult.branchDeleted}`);
+  console.log('✅ Worktree removed');
+  describeRemoveResult(removeResult);
 
-  await pause('Step 12: Switch to main branch');
+  await pause('Step 12: Show the main worktree');
 
-  console.log('\n🔄 Switching to main branch...');
-  await wt.switch('main');
-  console.log('✅ Now on main branch');
+  console.log('\n🔄 Locating main worktree...');
+  const mainResult = await wt.switch('main');
+  console.log(`✅ Main worktree: ${expandPath(mainResult.path)}`);
 
   await pause('Step 13: Merge feature branch to main');
 
   console.log('\n🔀 Merging feature-add-demo branch into main...');
-  const mergeResult = await wt.merge();
-  console.log(`✅ Merged: ${mergeResult.merged}`);
-  console.log(`   Target: ${mergeResult.target}`);
-  console.log(`   Worktree removed: ${mergeResult.worktreeRemoved}`);
+  const featureWt = worktrunk({ baseDir: worktreePath });
+  const mergeResult = await featureWt.merge({ target: 'main' });
+  console.log('✅ Merge finished');
+  console.log(`   Target: ${mergeResult.target || 'main'}`);
+  console.log(`   Source: ${mergeResult.source || mergeResult.branch || 'feature-add-demo'}`);
 
   await pause('Step 14: List worktrees after merge');
 
@@ -190,26 +205,21 @@ async function main() {
   const listResult4 = await wt.list();
   console.log(`Current worktree: ${listResult4.current}`);
   console.log('All worktrees:');
-  listResult4.worktrees.forEach(w => {
-    console.log(`  - ${w.name} (${w.branch})${w.isMain ? ' [MAIN]' : ''}`);
-    console.log(`    Path: ${w.path}`);
-  });
+  listResult4.worktrees.forEach(describeWorktree);
 
   await pause('Step 16: Create worktree with base from main');
 
   console.log('\n🌱 Creating worktree "bugfix" from main branch...');
-  const createResult3 = await wt.create({ name: 'bugfix', base: 'main' });
+  const createResult3 = await wt.create({ branch: 'bugfix', base: 'main' });
   console.log(`✅ Worktree created!`);
-  console.log(`   Name: ${createResult3.worktree}`);
-  console.log(`   Branch: ${createResult3.branch}`);
-  console.log(`   Path: ${createResult3.path}`);
+  describeSwitchResult(createResult3);
 
   await pause('Step 17: Remove worktree keeping branch');
 
   console.log('\n🗑️  Removing worktree but keeping the branch...');
-  const removeResult2 = await wt.remove({ name: 'bugfix', keepBranch: true });
-  console.log(`✅ Worktree removed: ${removeResult2.removed}`);
-  console.log(`   Branch deleted: ${removeResult2.branchDeleted}`);
+  const removeResult2 = await wt.remove({ branches: ['bugfix'], keepBranch: true });
+  console.log('✅ Worktree removed, branch kept');
+  describeRemoveResult(removeResult2);
 
   await pause('Step 18: Final worktree listing');
 
@@ -217,10 +227,7 @@ async function main() {
   const listResult6 = await wt.list();
   console.log(`Current worktree: ${listResult6.current}`);
   console.log('All worktrees:');
-  listResult6.worktrees.forEach(w => {
-    console.log(`  - ${w.name} (${w.branch})${w.isMain ? ' [MAIN]' : ''}`);
-    console.log(`    Path: ${w.path}`);
-  });
+  listResult6.worktrees.forEach(describeWorktree);
 
   console.log();
   console.log('='.repeat(60));
